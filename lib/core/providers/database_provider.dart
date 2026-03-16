@@ -1,9 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/database/app_database.dart';
 
-// TO MIGRATE: replace with @Riverpod(keepAlive: true) on a top-level function
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
-  ref.onDispose(() => db.close()); //this methiod isnt defined
+  // No explicit close on onDispose needed for standard web/mobile drift usage
+  // as it handles connections automatically, but we keep it clean.
+  ref.onDispose(() => db.close());
   return db;
 });

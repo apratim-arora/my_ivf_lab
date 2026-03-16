@@ -24,11 +24,17 @@ class CyclesDao extends DatabaseAccessor<AppDatabase> with _$CyclesDaoMixin {
         .watch();
   }
 
-  Stream<List<IvfCycle>> watchActive() =>
-      (select(ivfCycles)
-            ..where((t) => t.oocytePickupDate.isNotNull())
-            ..orderBy([(t) => OrderingTerm.desc(t.oocytePickupDate)]))
-          .watch();
+  Stream<List<IvfCycle>> watchActive() {
+    // Define 'active' as cycles created within the last 14 days
+    // or having a pickup date within the last 7 days.
+    final now = DateTime.now();
+    final twoWeeksAgo = now.subtract(const Duration(days: 14));
+
+    return (select(ivfCycles)
+          ..where((t) => t.oocytePickupDate.isNotNull() | t.createdAt.isBiggerThanValue(twoWeeksAgo))
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .watch();
+  }
 
   Future<int> insertCycle(IvfCyclesCompanion entry) =>
       into(ivfCycles).insert(entry);

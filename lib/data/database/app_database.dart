@@ -9,54 +9,58 @@ import 'daos/transfer_dao.dart';
 part 'app_database.g.dart';
 
 class IvfCycles extends Table {
-  late final id = integer().autoIncrement()();
-  late final cycleIdentifier = text().nullable()();
-  late final husbandName = text()();
-  late final wifeName = text()();
-  late final husbandAge = integer()();
-  late final wifeAge = integer()();
-  late final amh = real().nullable()();
-  late final bmi = real().nullable()();
-  late final infertilityType = text().nullable()();
-  late final otherInfertilityType = text().nullable()();
-  late final stimProtocol = text().nullable()();
-  late final semenVolume = real().nullable()();
-  late final spermConc = real().nullable()();
-  late final motilityFp = real().nullable()();
-  late final motilitySp = real().nullable()();
-  late final motilityIm = real().nullable()();
-  late final oocytePickupDate = dateTime().nullable()();
-  late final oocytePickupTime = text().nullable()();
-  late final icsiTime = text().nullable()();
-  late final occRecovered = integer().nullable()();
-  late final oocyteMii = integer().nullable()();
-  late final oocyteMi = integer().nullable()();
-  late final oocyteGv = integer().nullable()();
-  late final totalBlastocysts = integer().nullable()();
-  late final createdAt = dateTime().withDefault(currentDateAndTime)();
-  late final updatedAt = dateTime().withDefault(currentDateAndTime)();
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get cycleIdentifier => text().nullable()();
+  TextColumn get husbandName => text()();
+  TextColumn get wifeName => text()();
+  IntColumn get husbandAge => integer()();
+  IntColumn get wifeAge => integer()();
+  RealColumn get amh => real().nullable()();
+  RealColumn get bmi => real().nullable()();
+  TextColumn get infertilityType => text().nullable()();
+  TextColumn get otherInfertilityType => text().nullable()();
+  TextColumn get stimProtocol => text().nullable()();
+  RealColumn get semenVolume => real().nullable()();
+  RealColumn get spermConc => real().nullable()();
+  RealColumn get motilityFp => real().nullable()();
+  RealColumn get motilitySp => real().nullable()();
+  RealColumn get motilityIm => real().nullable()();
+  DateTimeColumn get oocytePickupDate => dateTime().nullable()();
+  TextColumn get oocytePickupTime => text().nullable()();
+  TextColumn get icsiTime => text().nullable()();
+  IntColumn get occRecovered => integer().nullable()();
+  IntColumn get oocyteMii => integer().nullable()();
+  IntColumn get oocyteMi => integer().nullable()();
+  IntColumn get oocyteGv => integer().nullable()();
+  IntColumn get totalBlastocysts => integer().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
 class DayObservations extends Table {
-  late final id = integer().autoIncrement()();
-  late final cycleId = integer().references(IvfCycles, #id)();
-  late final dayNumber = integer()();
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get cycleId => integer().references(IvfCycles, #id)();
+  IntColumn get dayNumber => integer()();
+
   // Day 1
-  late final twoPN2PB = integer().nullable()();
-  late final twoPBOnly = integer().nullable()();
-  late final necrotic = integer().nullable()();
+  IntColumn get twoPN2PB => integer().nullable()();
+  IntColumn get twoPBOnly => integer().nullable()();
+  IntColumn get necrotic => integer().nullable()();
+
   // Day 2
-  late final twoPNArrest = integer().nullable()();
-  late final fourCellG1 = integer().nullable()();
-  late final fourCellG2 = integer().nullable()();
-  late final twoCells = integer().nullable()();
-  late final threeCells = integer().nullable()();
-  late final fiveCells = integer().nullable()();
+  IntColumn get twoPNArrest => integer().nullable()();
+  IntColumn get fourCellG1 => integer().nullable()();
+  IntColumn get fourCellG2 => integer().nullable()();
+  IntColumn get twoCells => integer().nullable()();
+  IntColumn get threeCells => integer().nullable()();
+  IntColumn get fiveCells => integer().nullable()();
+
   // Day 3
-  late final eightCellG1 = integer().nullable()();
-  late final eightCellG2 = integer().nullable()();
-  late final fourCellArrest = integer().nullable()();
-  late final recordedAt = dateTime().withDefault(currentDateAndTime)();
+  IntColumn get eightCellG1 => integer().nullable()();
+  IntColumn get eightCellG2 => integer().nullable()();
+  IntColumn get fourCellArrest => integer().nullable()();
+
+  DateTimeColumn get recordedAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
   List<Set<Column>> get uniqueKeys => [
@@ -65,19 +69,19 @@ class DayObservations extends Table {
 }
 
 class BlastocystGrades extends Table {
-  late final id = integer().autoIncrement()();
-  late final cycleId = integer().references(IvfCycles, #id)();
-  late final grade = text()();
-  late final count = integer().withDefault(const Constant(0))();
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get cycleId => integer().references(IvfCycles, #id)();
+  TextColumn get grade => text()();
+  IntColumn get count => integer().withDefault(const Constant(0))();
 }
 
 class EmbryoTransfers extends Table {
-  late final id = integer().autoIncrement()();
-  late final cycleId = integer().references(IvfCycles, #id)();
-  late final embryosTransferred = integer().nullable()();
-  late final transferDate = dateTime().nullable()();
-  late final embryosFrozen = integer().nullable()();
-  late final cryoDevice = text().nullable()();
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get cycleId => integer().references(IvfCycles, #id)();
+  IntColumn get embryosTransferred => integer().nullable()();
+  DateTimeColumn get transferDate => dateTime().nullable()();
+  IntColumn get embryosFrozen => integer().nullable()();
+  TextColumn get cryoDevice => text().nullable()();
 }
 
 @DriftDatabase(
@@ -86,12 +90,25 @@ class EmbryoTransfers extends Table {
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
-    : super(executor ?? driftDatabase(name: 'embryology'));
+    : super(executor ?? driftDatabase(name: 'embryology_v2')); // Changed name to force fresh start
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
-  MigrationStrategy get migration =>
-      MigrationStrategy(onCreate: (m) => m.createAll());
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) async {
+      await m.createAll();
+    },
+    onUpgrade: (m, from, to) async {
+      // In a real lab app, we'd handle each change.
+      // For this initial setup phase, if v1 exists, we just recreate to be safe.
+      if (from < 2) {
+        for (final table in allTables) {
+          await m.deleteTable(table.actualTableName);
+        }
+        await m.createAll();
+      }
+    },
+  );
 }
