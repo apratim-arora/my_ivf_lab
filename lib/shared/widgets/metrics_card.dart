@@ -17,8 +17,9 @@ class MetricsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (maturationRate == null &&
         fertilizationRate == null &&
-        blastulationRate == null)
+        blastulationRate == null) {
       return const SizedBox.shrink();
+    }
 
     final pct = NumberFormat.percentPattern()..maximumFractionDigits = 1;
 

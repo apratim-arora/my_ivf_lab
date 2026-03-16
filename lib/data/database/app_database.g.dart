@@ -22,6 +22,17 @@ class $IvfCyclesTable extends IvfCycles
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
+  static const VerificationMeta _cycleIdentifierMeta = const VerificationMeta(
+    'cycleIdentifier',
+  );
+  @override
+  late final GeneratedColumn<String> cycleIdentifier = GeneratedColumn<String>(
+    'cycle_identifier',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _husbandNameMeta = const VerificationMeta(
     'husbandName',
   );
@@ -95,6 +106,17 @@ class $IvfCyclesTable extends IvfCycles
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _otherInfertilityTypeMeta =
+      const VerificationMeta('otherInfertilityType');
+  @override
+  late final GeneratedColumn<String> otherInfertilityType =
+      GeneratedColumn<String>(
+        'other_infertility_type',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _stimProtocolMeta = const VerificationMeta(
     'stimProtocol',
   );
@@ -239,6 +261,17 @@ class $IvfCyclesTable extends IvfCycles
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _totalBlastocystsMeta = const VerificationMeta(
+    'totalBlastocysts',
+  );
+  @override
+  late final GeneratedColumn<int> totalBlastocysts = GeneratedColumn<int>(
+    'total_blastocysts',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -266,6 +299,7 @@ class $IvfCyclesTable extends IvfCycles
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    cycleIdentifier,
     husbandName,
     wifeName,
     husbandAge,
@@ -273,6 +307,7 @@ class $IvfCyclesTable extends IvfCycles
     amh,
     bmi,
     infertilityType,
+    otherInfertilityType,
     stimProtocol,
     semenVolume,
     spermConc,
@@ -286,6 +321,7 @@ class $IvfCyclesTable extends IvfCycles
     oocyteMii,
     oocyteMi,
     oocyteGv,
+    totalBlastocysts,
     createdAt,
     updatedAt,
   ];
@@ -303,6 +339,15 @@ class $IvfCyclesTable extends IvfCycles
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('cycle_identifier')) {
+      context.handle(
+        _cycleIdentifierMeta,
+        cycleIdentifier.isAcceptableOrUnknown(
+          data['cycle_identifier']!,
+          _cycleIdentifierMeta,
+        ),
+      );
     }
     if (data.containsKey('husband_name')) {
       context.handle(
@@ -357,6 +402,15 @@ class $IvfCyclesTable extends IvfCycles
         infertilityType.isAcceptableOrUnknown(
           data['infertility_type']!,
           _infertilityTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('other_infertility_type')) {
+      context.handle(
+        _otherInfertilityTypeMeta,
+        otherInfertilityType.isAcceptableOrUnknown(
+          data['other_infertility_type']!,
+          _otherInfertilityTypeMeta,
         ),
       );
     }
@@ -453,6 +507,15 @@ class $IvfCyclesTable extends IvfCycles
         oocyteGv.isAcceptableOrUnknown(data['oocyte_gv']!, _oocyteGvMeta),
       );
     }
+    if (data.containsKey('total_blastocysts')) {
+      context.handle(
+        _totalBlastocystsMeta,
+        totalBlastocysts.isAcceptableOrUnknown(
+          data['total_blastocysts']!,
+          _totalBlastocystsMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -478,6 +541,10 @@ class $IvfCyclesTable extends IvfCycles
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
+      cycleIdentifier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cycle_identifier'],
+      ),
       husbandName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}husband_name'],
@@ -505,6 +572,10 @@ class $IvfCyclesTable extends IvfCycles
       infertilityType: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}infertility_type'],
+      ),
+      otherInfertilityType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}other_infertility_type'],
       ),
       stimProtocol: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -558,6 +629,10 @@ class $IvfCyclesTable extends IvfCycles
         DriftSqlType.int,
         data['${effectivePrefix}oocyte_gv'],
       ),
+      totalBlastocysts: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_blastocysts'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -577,6 +652,7 @@ class $IvfCyclesTable extends IvfCycles
 
 class IvfCycle extends DataClass implements Insertable<IvfCycle> {
   final int id;
+  final String? cycleIdentifier;
   final String husbandName;
   final String wifeName;
   final int husbandAge;
@@ -584,6 +660,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
   final double? amh;
   final double? bmi;
   final String? infertilityType;
+  final String? otherInfertilityType;
   final String? stimProtocol;
   final double? semenVolume;
   final double? spermConc;
@@ -597,10 +674,12 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
   final int? oocyteMii;
   final int? oocyteMi;
   final int? oocyteGv;
+  final int? totalBlastocysts;
   final DateTime createdAt;
   final DateTime updatedAt;
   const IvfCycle({
     required this.id,
+    this.cycleIdentifier,
     required this.husbandName,
     required this.wifeName,
     required this.husbandAge,
@@ -608,6 +687,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
     this.amh,
     this.bmi,
     this.infertilityType,
+    this.otherInfertilityType,
     this.stimProtocol,
     this.semenVolume,
     this.spermConc,
@@ -621,6 +701,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
     this.oocyteMii,
     this.oocyteMi,
     this.oocyteGv,
+    this.totalBlastocysts,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -628,6 +709,9 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    if (!nullToAbsent || cycleIdentifier != null) {
+      map['cycle_identifier'] = Variable<String>(cycleIdentifier);
+    }
     map['husband_name'] = Variable<String>(husbandName);
     map['wife_name'] = Variable<String>(wifeName);
     map['husband_age'] = Variable<int>(husbandAge);
@@ -640,6 +724,9 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
     }
     if (!nullToAbsent || infertilityType != null) {
       map['infertility_type'] = Variable<String>(infertilityType);
+    }
+    if (!nullToAbsent || otherInfertilityType != null) {
+      map['other_infertility_type'] = Variable<String>(otherInfertilityType);
     }
     if (!nullToAbsent || stimProtocol != null) {
       map['stim_protocol'] = Variable<String>(stimProtocol);
@@ -680,6 +767,9 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
     if (!nullToAbsent || oocyteGv != null) {
       map['oocyte_gv'] = Variable<int>(oocyteGv);
     }
+    if (!nullToAbsent || totalBlastocysts != null) {
+      map['total_blastocysts'] = Variable<int>(totalBlastocysts);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -688,6 +778,9 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
   IvfCyclesCompanion toCompanion(bool nullToAbsent) {
     return IvfCyclesCompanion(
       id: Value(id),
+      cycleIdentifier: cycleIdentifier == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cycleIdentifier),
       husbandName: Value(husbandName),
       wifeName: Value(wifeName),
       husbandAge: Value(husbandAge),
@@ -697,6 +790,9 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
       infertilityType: infertilityType == null && nullToAbsent
           ? const Value.absent()
           : Value(infertilityType),
+      otherInfertilityType: otherInfertilityType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(otherInfertilityType),
       stimProtocol: stimProtocol == null && nullToAbsent
           ? const Value.absent()
           : Value(stimProtocol),
@@ -736,6 +832,9 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
       oocyteGv: oocyteGv == null && nullToAbsent
           ? const Value.absent()
           : Value(oocyteGv),
+      totalBlastocysts: totalBlastocysts == null && nullToAbsent
+          ? const Value.absent()
+          : Value(totalBlastocysts),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -748,6 +847,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return IvfCycle(
       id: serializer.fromJson<int>(json['id']),
+      cycleIdentifier: serializer.fromJson<String?>(json['cycleIdentifier']),
       husbandName: serializer.fromJson<String>(json['husbandName']),
       wifeName: serializer.fromJson<String>(json['wifeName']),
       husbandAge: serializer.fromJson<int>(json['husbandAge']),
@@ -755,6 +855,9 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
       amh: serializer.fromJson<double?>(json['amh']),
       bmi: serializer.fromJson<double?>(json['bmi']),
       infertilityType: serializer.fromJson<String?>(json['infertilityType']),
+      otherInfertilityType: serializer.fromJson<String?>(
+        json['otherInfertilityType'],
+      ),
       stimProtocol: serializer.fromJson<String?>(json['stimProtocol']),
       semenVolume: serializer.fromJson<double?>(json['semenVolume']),
       spermConc: serializer.fromJson<double?>(json['spermConc']),
@@ -770,6 +873,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
       oocyteMii: serializer.fromJson<int?>(json['oocyteMii']),
       oocyteMi: serializer.fromJson<int?>(json['oocyteMi']),
       oocyteGv: serializer.fromJson<int?>(json['oocyteGv']),
+      totalBlastocysts: serializer.fromJson<int?>(json['totalBlastocysts']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -779,6 +883,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'cycleIdentifier': serializer.toJson<String?>(cycleIdentifier),
       'husbandName': serializer.toJson<String>(husbandName),
       'wifeName': serializer.toJson<String>(wifeName),
       'husbandAge': serializer.toJson<int>(husbandAge),
@@ -786,6 +891,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
       'amh': serializer.toJson<double?>(amh),
       'bmi': serializer.toJson<double?>(bmi),
       'infertilityType': serializer.toJson<String?>(infertilityType),
+      'otherInfertilityType': serializer.toJson<String?>(otherInfertilityType),
       'stimProtocol': serializer.toJson<String?>(stimProtocol),
       'semenVolume': serializer.toJson<double?>(semenVolume),
       'spermConc': serializer.toJson<double?>(spermConc),
@@ -799,6 +905,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
       'oocyteMii': serializer.toJson<int?>(oocyteMii),
       'oocyteMi': serializer.toJson<int?>(oocyteMi),
       'oocyteGv': serializer.toJson<int?>(oocyteGv),
+      'totalBlastocysts': serializer.toJson<int?>(totalBlastocysts),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -806,6 +913,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
 
   IvfCycle copyWith({
     int? id,
+    Value<String?> cycleIdentifier = const Value.absent(),
     String? husbandName,
     String? wifeName,
     int? husbandAge,
@@ -813,6 +921,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
     Value<double?> amh = const Value.absent(),
     Value<double?> bmi = const Value.absent(),
     Value<String?> infertilityType = const Value.absent(),
+    Value<String?> otherInfertilityType = const Value.absent(),
     Value<String?> stimProtocol = const Value.absent(),
     Value<double?> semenVolume = const Value.absent(),
     Value<double?> spermConc = const Value.absent(),
@@ -826,10 +935,14 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
     Value<int?> oocyteMii = const Value.absent(),
     Value<int?> oocyteMi = const Value.absent(),
     Value<int?> oocyteGv = const Value.absent(),
+    Value<int?> totalBlastocysts = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => IvfCycle(
     id: id ?? this.id,
+    cycleIdentifier: cycleIdentifier.present
+        ? cycleIdentifier.value
+        : this.cycleIdentifier,
     husbandName: husbandName ?? this.husbandName,
     wifeName: wifeName ?? this.wifeName,
     husbandAge: husbandAge ?? this.husbandAge,
@@ -839,6 +952,9 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
     infertilityType: infertilityType.present
         ? infertilityType.value
         : this.infertilityType,
+    otherInfertilityType: otherInfertilityType.present
+        ? otherInfertilityType.value
+        : this.otherInfertilityType,
     stimProtocol: stimProtocol.present ? stimProtocol.value : this.stimProtocol,
     semenVolume: semenVolume.present ? semenVolume.value : this.semenVolume,
     spermConc: spermConc.present ? spermConc.value : this.spermConc,
@@ -856,12 +972,18 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
     oocyteMii: oocyteMii.present ? oocyteMii.value : this.oocyteMii,
     oocyteMi: oocyteMi.present ? oocyteMi.value : this.oocyteMi,
     oocyteGv: oocyteGv.present ? oocyteGv.value : this.oocyteGv,
+    totalBlastocysts: totalBlastocysts.present
+        ? totalBlastocysts.value
+        : this.totalBlastocysts,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   IvfCycle copyWithCompanion(IvfCyclesCompanion data) {
     return IvfCycle(
       id: data.id.present ? data.id.value : this.id,
+      cycleIdentifier: data.cycleIdentifier.present
+          ? data.cycleIdentifier.value
+          : this.cycleIdentifier,
       husbandName: data.husbandName.present
           ? data.husbandName.value
           : this.husbandName,
@@ -875,6 +997,9 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
       infertilityType: data.infertilityType.present
           ? data.infertilityType.value
           : this.infertilityType,
+      otherInfertilityType: data.otherInfertilityType.present
+          ? data.otherInfertilityType.value
+          : this.otherInfertilityType,
       stimProtocol: data.stimProtocol.present
           ? data.stimProtocol.value
           : this.stimProtocol,
@@ -904,6 +1029,9 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
       oocyteMii: data.oocyteMii.present ? data.oocyteMii.value : this.oocyteMii,
       oocyteMi: data.oocyteMi.present ? data.oocyteMi.value : this.oocyteMi,
       oocyteGv: data.oocyteGv.present ? data.oocyteGv.value : this.oocyteGv,
+      totalBlastocysts: data.totalBlastocysts.present
+          ? data.totalBlastocysts.value
+          : this.totalBlastocysts,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -913,6 +1041,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
   String toString() {
     return (StringBuffer('IvfCycle(')
           ..write('id: $id, ')
+          ..write('cycleIdentifier: $cycleIdentifier, ')
           ..write('husbandName: $husbandName, ')
           ..write('wifeName: $wifeName, ')
           ..write('husbandAge: $husbandAge, ')
@@ -920,6 +1049,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
           ..write('amh: $amh, ')
           ..write('bmi: $bmi, ')
           ..write('infertilityType: $infertilityType, ')
+          ..write('otherInfertilityType: $otherInfertilityType, ')
           ..write('stimProtocol: $stimProtocol, ')
           ..write('semenVolume: $semenVolume, ')
           ..write('spermConc: $spermConc, ')
@@ -933,6 +1063,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
           ..write('oocyteMii: $oocyteMii, ')
           ..write('oocyteMi: $oocyteMi, ')
           ..write('oocyteGv: $oocyteGv, ')
+          ..write('totalBlastocysts: $totalBlastocysts, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -942,6 +1073,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
   @override
   int get hashCode => Object.hashAll([
     id,
+    cycleIdentifier,
     husbandName,
     wifeName,
     husbandAge,
@@ -949,6 +1081,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
     amh,
     bmi,
     infertilityType,
+    otherInfertilityType,
     stimProtocol,
     semenVolume,
     spermConc,
@@ -962,6 +1095,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
     oocyteMii,
     oocyteMi,
     oocyteGv,
+    totalBlastocysts,
     createdAt,
     updatedAt,
   ]);
@@ -970,6 +1104,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
       identical(this, other) ||
       (other is IvfCycle &&
           other.id == this.id &&
+          other.cycleIdentifier == this.cycleIdentifier &&
           other.husbandName == this.husbandName &&
           other.wifeName == this.wifeName &&
           other.husbandAge == this.husbandAge &&
@@ -977,6 +1112,7 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
           other.amh == this.amh &&
           other.bmi == this.bmi &&
           other.infertilityType == this.infertilityType &&
+          other.otherInfertilityType == this.otherInfertilityType &&
           other.stimProtocol == this.stimProtocol &&
           other.semenVolume == this.semenVolume &&
           other.spermConc == this.spermConc &&
@@ -990,12 +1126,14 @@ class IvfCycle extends DataClass implements Insertable<IvfCycle> {
           other.oocyteMii == this.oocyteMii &&
           other.oocyteMi == this.oocyteMi &&
           other.oocyteGv == this.oocyteGv &&
+          other.totalBlastocysts == this.totalBlastocysts &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
 
 class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
   final Value<int> id;
+  final Value<String?> cycleIdentifier;
   final Value<String> husbandName;
   final Value<String> wifeName;
   final Value<int> husbandAge;
@@ -1003,6 +1141,7 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
   final Value<double?> amh;
   final Value<double?> bmi;
   final Value<String?> infertilityType;
+  final Value<String?> otherInfertilityType;
   final Value<String?> stimProtocol;
   final Value<double?> semenVolume;
   final Value<double?> spermConc;
@@ -1016,10 +1155,12 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
   final Value<int?> oocyteMii;
   final Value<int?> oocyteMi;
   final Value<int?> oocyteGv;
+  final Value<int?> totalBlastocysts;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   const IvfCyclesCompanion({
     this.id = const Value.absent(),
+    this.cycleIdentifier = const Value.absent(),
     this.husbandName = const Value.absent(),
     this.wifeName = const Value.absent(),
     this.husbandAge = const Value.absent(),
@@ -1027,6 +1168,7 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
     this.amh = const Value.absent(),
     this.bmi = const Value.absent(),
     this.infertilityType = const Value.absent(),
+    this.otherInfertilityType = const Value.absent(),
     this.stimProtocol = const Value.absent(),
     this.semenVolume = const Value.absent(),
     this.spermConc = const Value.absent(),
@@ -1040,11 +1182,13 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
     this.oocyteMii = const Value.absent(),
     this.oocyteMi = const Value.absent(),
     this.oocyteGv = const Value.absent(),
+    this.totalBlastocysts = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
   IvfCyclesCompanion.insert({
     this.id = const Value.absent(),
+    this.cycleIdentifier = const Value.absent(),
     required String husbandName,
     required String wifeName,
     required int husbandAge,
@@ -1052,6 +1196,7 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
     this.amh = const Value.absent(),
     this.bmi = const Value.absent(),
     this.infertilityType = const Value.absent(),
+    this.otherInfertilityType = const Value.absent(),
     this.stimProtocol = const Value.absent(),
     this.semenVolume = const Value.absent(),
     this.spermConc = const Value.absent(),
@@ -1065,6 +1210,7 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
     this.oocyteMii = const Value.absent(),
     this.oocyteMi = const Value.absent(),
     this.oocyteGv = const Value.absent(),
+    this.totalBlastocysts = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   }) : husbandName = Value(husbandName),
@@ -1073,6 +1219,7 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
        wifeAge = Value(wifeAge);
   static Insertable<IvfCycle> custom({
     Expression<int>? id,
+    Expression<String>? cycleIdentifier,
     Expression<String>? husbandName,
     Expression<String>? wifeName,
     Expression<int>? husbandAge,
@@ -1080,6 +1227,7 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
     Expression<double>? amh,
     Expression<double>? bmi,
     Expression<String>? infertilityType,
+    Expression<String>? otherInfertilityType,
     Expression<String>? stimProtocol,
     Expression<double>? semenVolume,
     Expression<double>? spermConc,
@@ -1093,11 +1241,13 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
     Expression<int>? oocyteMii,
     Expression<int>? oocyteMi,
     Expression<int>? oocyteGv,
+    Expression<int>? totalBlastocysts,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (cycleIdentifier != null) 'cycle_identifier': cycleIdentifier,
       if (husbandName != null) 'husband_name': husbandName,
       if (wifeName != null) 'wife_name': wifeName,
       if (husbandAge != null) 'husband_age': husbandAge,
@@ -1105,6 +1255,8 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
       if (amh != null) 'amh': amh,
       if (bmi != null) 'bmi': bmi,
       if (infertilityType != null) 'infertility_type': infertilityType,
+      if (otherInfertilityType != null)
+        'other_infertility_type': otherInfertilityType,
       if (stimProtocol != null) 'stim_protocol': stimProtocol,
       if (semenVolume != null) 'semen_volume': semenVolume,
       if (spermConc != null) 'sperm_conc': spermConc,
@@ -1118,6 +1270,7 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
       if (oocyteMii != null) 'oocyte_mii': oocyteMii,
       if (oocyteMi != null) 'oocyte_mi': oocyteMi,
       if (oocyteGv != null) 'oocyte_gv': oocyteGv,
+      if (totalBlastocysts != null) 'total_blastocysts': totalBlastocysts,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -1125,6 +1278,7 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
 
   IvfCyclesCompanion copyWith({
     Value<int>? id,
+    Value<String?>? cycleIdentifier,
     Value<String>? husbandName,
     Value<String>? wifeName,
     Value<int>? husbandAge,
@@ -1132,6 +1286,7 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
     Value<double?>? amh,
     Value<double?>? bmi,
     Value<String?>? infertilityType,
+    Value<String?>? otherInfertilityType,
     Value<String?>? stimProtocol,
     Value<double?>? semenVolume,
     Value<double?>? spermConc,
@@ -1145,11 +1300,13 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
     Value<int?>? oocyteMii,
     Value<int?>? oocyteMi,
     Value<int?>? oocyteGv,
+    Value<int?>? totalBlastocysts,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
   }) {
     return IvfCyclesCompanion(
       id: id ?? this.id,
+      cycleIdentifier: cycleIdentifier ?? this.cycleIdentifier,
       husbandName: husbandName ?? this.husbandName,
       wifeName: wifeName ?? this.wifeName,
       husbandAge: husbandAge ?? this.husbandAge,
@@ -1157,6 +1314,7 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
       amh: amh ?? this.amh,
       bmi: bmi ?? this.bmi,
       infertilityType: infertilityType ?? this.infertilityType,
+      otherInfertilityType: otherInfertilityType ?? this.otherInfertilityType,
       stimProtocol: stimProtocol ?? this.stimProtocol,
       semenVolume: semenVolume ?? this.semenVolume,
       spermConc: spermConc ?? this.spermConc,
@@ -1170,6 +1328,7 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
       oocyteMii: oocyteMii ?? this.oocyteMii,
       oocyteMi: oocyteMi ?? this.oocyteMi,
       oocyteGv: oocyteGv ?? this.oocyteGv,
+      totalBlastocysts: totalBlastocysts ?? this.totalBlastocysts,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -1180,6 +1339,9 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (cycleIdentifier.present) {
+      map['cycle_identifier'] = Variable<String>(cycleIdentifier.value);
     }
     if (husbandName.present) {
       map['husband_name'] = Variable<String>(husbandName.value);
@@ -1201,6 +1363,11 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
     }
     if (infertilityType.present) {
       map['infertility_type'] = Variable<String>(infertilityType.value);
+    }
+    if (otherInfertilityType.present) {
+      map['other_infertility_type'] = Variable<String>(
+        otherInfertilityType.value,
+      );
     }
     if (stimProtocol.present) {
       map['stim_protocol'] = Variable<String>(stimProtocol.value);
@@ -1241,6 +1408,9 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
     if (oocyteGv.present) {
       map['oocyte_gv'] = Variable<int>(oocyteGv.value);
     }
+    if (totalBlastocysts.present) {
+      map['total_blastocysts'] = Variable<int>(totalBlastocysts.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1254,6 +1424,7 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
   String toString() {
     return (StringBuffer('IvfCyclesCompanion(')
           ..write('id: $id, ')
+          ..write('cycleIdentifier: $cycleIdentifier, ')
           ..write('husbandName: $husbandName, ')
           ..write('wifeName: $wifeName, ')
           ..write('husbandAge: $husbandAge, ')
@@ -1261,6 +1432,7 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
           ..write('amh: $amh, ')
           ..write('bmi: $bmi, ')
           ..write('infertilityType: $infertilityType, ')
+          ..write('otherInfertilityType: $otherInfertilityType, ')
           ..write('stimProtocol: $stimProtocol, ')
           ..write('semenVolume: $semenVolume, ')
           ..write('spermConc: $spermConc, ')
@@ -1274,6 +1446,7 @@ class IvfCyclesCompanion extends UpdateCompanion<IvfCycle> {
           ..write('oocyteMii: $oocyteMii, ')
           ..write('oocyteMi: $oocyteMi, ')
           ..write('oocyteGv: $oocyteGv, ')
+          ..write('totalBlastocysts: $totalBlastocysts, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -2986,6 +3159,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 typedef $$IvfCyclesTableCreateCompanionBuilder =
     IvfCyclesCompanion Function({
       Value<int> id,
+      Value<String?> cycleIdentifier,
       required String husbandName,
       required String wifeName,
       required int husbandAge,
@@ -2993,6 +3167,7 @@ typedef $$IvfCyclesTableCreateCompanionBuilder =
       Value<double?> amh,
       Value<double?> bmi,
       Value<String?> infertilityType,
+      Value<String?> otherInfertilityType,
       Value<String?> stimProtocol,
       Value<double?> semenVolume,
       Value<double?> spermConc,
@@ -3006,12 +3181,14 @@ typedef $$IvfCyclesTableCreateCompanionBuilder =
       Value<int?> oocyteMii,
       Value<int?> oocyteMi,
       Value<int?> oocyteGv,
+      Value<int?> totalBlastocysts,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
     });
 typedef $$IvfCyclesTableUpdateCompanionBuilder =
     IvfCyclesCompanion Function({
       Value<int> id,
+      Value<String?> cycleIdentifier,
       Value<String> husbandName,
       Value<String> wifeName,
       Value<int> husbandAge,
@@ -3019,6 +3196,7 @@ typedef $$IvfCyclesTableUpdateCompanionBuilder =
       Value<double?> amh,
       Value<double?> bmi,
       Value<String?> infertilityType,
+      Value<String?> otherInfertilityType,
       Value<String?> stimProtocol,
       Value<double?> semenVolume,
       Value<double?> spermConc,
@@ -3032,6 +3210,7 @@ typedef $$IvfCyclesTableUpdateCompanionBuilder =
       Value<int?> oocyteMii,
       Value<int?> oocyteMi,
       Value<int?> oocyteGv,
+      Value<int?> totalBlastocysts,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
     });
@@ -3124,6 +3303,11 @@ class $$IvfCyclesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get cycleIdentifier => $composableBuilder(
+    column: $table.cycleIdentifier,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get husbandName => $composableBuilder(
     column: $table.husbandName,
     builder: (column) => ColumnFilters(column),
@@ -3156,6 +3340,11 @@ class $$IvfCyclesTableFilterComposer
 
   ColumnFilters<String> get infertilityType => $composableBuilder(
     column: $table.infertilityType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get otherInfertilityType => $composableBuilder(
+    column: $table.otherInfertilityType,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3221,6 +3410,11 @@ class $$IvfCyclesTableFilterComposer
 
   ColumnFilters<int> get oocyteGv => $composableBuilder(
     column: $table.oocyteGv,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalBlastocysts => $composableBuilder(
+    column: $table.totalBlastocysts,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3324,6 +3518,11 @@ class $$IvfCyclesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get cycleIdentifier => $composableBuilder(
+    column: $table.cycleIdentifier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get husbandName => $composableBuilder(
     column: $table.husbandName,
     builder: (column) => ColumnOrderings(column),
@@ -3356,6 +3555,11 @@ class $$IvfCyclesTableOrderingComposer
 
   ColumnOrderings<String> get infertilityType => $composableBuilder(
     column: $table.infertilityType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get otherInfertilityType => $composableBuilder(
+    column: $table.otherInfertilityType,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -3424,6 +3628,11 @@ class $$IvfCyclesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get totalBlastocysts => $composableBuilder(
+    column: $table.totalBlastocysts,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3446,6 +3655,11 @@ class $$IvfCyclesTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get cycleIdentifier => $composableBuilder(
+    column: $table.cycleIdentifier,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get husbandName => $composableBuilder(
     column: $table.husbandName,
@@ -3471,6 +3685,11 @@ class $$IvfCyclesTableAnnotationComposer
 
   GeneratedColumn<String> get infertilityType => $composableBuilder(
     column: $table.infertilityType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get otherInfertilityType => $composableBuilder(
+    column: $table.otherInfertilityType,
     builder: (column) => column,
   );
 
@@ -3528,6 +3747,11 @@ class $$IvfCyclesTableAnnotationComposer
 
   GeneratedColumn<int> get oocyteGv =>
       $composableBuilder(column: $table.oocyteGv, builder: (column) => column);
+
+  GeneratedColumn<int> get totalBlastocysts => $composableBuilder(
+    column: $table.totalBlastocysts,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -3644,6 +3868,7 @@ class $$IvfCyclesTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String?> cycleIdentifier = const Value.absent(),
                 Value<String> husbandName = const Value.absent(),
                 Value<String> wifeName = const Value.absent(),
                 Value<int> husbandAge = const Value.absent(),
@@ -3651,6 +3876,7 @@ class $$IvfCyclesTableTableManager
                 Value<double?> amh = const Value.absent(),
                 Value<double?> bmi = const Value.absent(),
                 Value<String?> infertilityType = const Value.absent(),
+                Value<String?> otherInfertilityType = const Value.absent(),
                 Value<String?> stimProtocol = const Value.absent(),
                 Value<double?> semenVolume = const Value.absent(),
                 Value<double?> spermConc = const Value.absent(),
@@ -3664,10 +3890,12 @@ class $$IvfCyclesTableTableManager
                 Value<int?> oocyteMii = const Value.absent(),
                 Value<int?> oocyteMi = const Value.absent(),
                 Value<int?> oocyteGv = const Value.absent(),
+                Value<int?> totalBlastocysts = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => IvfCyclesCompanion(
                 id: id,
+                cycleIdentifier: cycleIdentifier,
                 husbandName: husbandName,
                 wifeName: wifeName,
                 husbandAge: husbandAge,
@@ -3675,6 +3903,7 @@ class $$IvfCyclesTableTableManager
                 amh: amh,
                 bmi: bmi,
                 infertilityType: infertilityType,
+                otherInfertilityType: otherInfertilityType,
                 stimProtocol: stimProtocol,
                 semenVolume: semenVolume,
                 spermConc: spermConc,
@@ -3688,12 +3917,14 @@ class $$IvfCyclesTableTableManager
                 oocyteMii: oocyteMii,
                 oocyteMi: oocyteMi,
                 oocyteGv: oocyteGv,
+                totalBlastocysts: totalBlastocysts,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String?> cycleIdentifier = const Value.absent(),
                 required String husbandName,
                 required String wifeName,
                 required int husbandAge,
@@ -3701,6 +3932,7 @@ class $$IvfCyclesTableTableManager
                 Value<double?> amh = const Value.absent(),
                 Value<double?> bmi = const Value.absent(),
                 Value<String?> infertilityType = const Value.absent(),
+                Value<String?> otherInfertilityType = const Value.absent(),
                 Value<String?> stimProtocol = const Value.absent(),
                 Value<double?> semenVolume = const Value.absent(),
                 Value<double?> spermConc = const Value.absent(),
@@ -3714,10 +3946,12 @@ class $$IvfCyclesTableTableManager
                 Value<int?> oocyteMii = const Value.absent(),
                 Value<int?> oocyteMi = const Value.absent(),
                 Value<int?> oocyteGv = const Value.absent(),
+                Value<int?> totalBlastocysts = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => IvfCyclesCompanion.insert(
                 id: id,
+                cycleIdentifier: cycleIdentifier,
                 husbandName: husbandName,
                 wifeName: wifeName,
                 husbandAge: husbandAge,
@@ -3725,6 +3959,7 @@ class $$IvfCyclesTableTableManager
                 amh: amh,
                 bmi: bmi,
                 infertilityType: infertilityType,
+                otherInfertilityType: otherInfertilityType,
                 stimProtocol: stimProtocol,
                 semenVolume: semenVolume,
                 spermConc: spermConc,
@@ -3738,6 +3973,7 @@ class $$IvfCyclesTableTableManager
                 oocyteMii: oocyteMii,
                 oocyteMi: oocyteMi,
                 oocyteGv: oocyteGv,
+                totalBlastocysts: totalBlastocysts,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),

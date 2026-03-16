@@ -1,24 +1,29 @@
-import 'package:drift/drift.dart';
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/database/app_database.dart';
 import '../../core/providers/repository_providers.dart';
 
-// Family param: (cycleId, dayNumber)
 typedef DayKey = ({int cycleId, int day});
 
-final dailyObsProvider =
-    AsyncNotifierProvider.family<DailyObsNotifier, DayObservation?, DayKey>(
-      DailyObsNotifier.new,
-    );
+class DailyObsNotifier extends AsyncNotifier<DayObservation?> {
+  final DayKey dayKeyArg;
+  DailyObsNotifier(this.dayKeyArg);
 
-class DailyObsNotifier extends FamilyAsyncNotifier<DayObservation?, DayKey> {
   @override
-  Future<DayObservation?> build(DayKey arg) =>
-      ref.read(observationRepositoryProvider).getForDay(arg.cycleId, arg.day);
+  FutureOr<DayObservation?> build() async {
+    final repo = ref.watch(observationRepositoryProvider);
+    return repo.getForDay(dayKeyArg.cycleId, dayKeyArg.day);
+  }
 
   Future<void> save(DayObservationsCompanion entry) async {
     final repo = ref.read(observationRepositoryProvider);
     await repo.upsert(entry);
-    state = AsyncData(await repo.getForDay(arg.cycleId, arg.day));
+    final updated = await repo.getForDay(dayKeyArg.cycleId, dayKeyArg.day);
+    state = AsyncData(updated);
   }
 }
+
+final dailyObsProvider =
+    AsyncNotifierProvider.family<DailyObsNotifier, DayObservation?, DayKey>(
+      (arg) => DailyObsNotifier(arg),
+    );

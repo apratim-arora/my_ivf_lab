@@ -15,7 +15,10 @@ class CyclesDao extends DatabaseAccessor<AppDatabase> with _$CyclesDaoMixin {
     final q = '%${query.toLowerCase()}%';
     return (select(ivfCycles)
           ..where(
-            (t) => t.husbandName.lower().like(q) | t.wifeName.lower().like(q),
+            (t) =>
+                t.husbandName.lower().like(q) |
+                t.wifeName.lower().like(q) |
+                t.cycleIdentifier.lower().like(q),
           )
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .watch();
