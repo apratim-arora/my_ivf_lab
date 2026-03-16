@@ -22,6 +22,7 @@ class SectionCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: ExpansionTile(
+        maintainState: true,
         initiallyExpanded: initiallyExpanded,
         leading: Icon(
           icon,

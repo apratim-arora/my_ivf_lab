@@ -5,6 +5,7 @@ class LabeledField extends StatelessWidget {
   final String label;
   final String? hint;
   final String? initialValue;
+  final TextEditingController? controller;
   final TextInputType keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final void Function(String) onChanged;
@@ -16,6 +17,7 @@ class LabeledField extends StatelessWidget {
     required this.onChanged,
     this.hint,
     this.initialValue,
+    this.controller,
     this.keyboardType = TextInputType.text,
     this.inputFormatters,
     this.validator,
@@ -26,7 +28,8 @@ class LabeledField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 12),
       child: TextFormField(
-        initialValue: initialValue,
+        initialValue: controller == null ? initialValue : null,
+        controller: controller,
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
         decoration: InputDecoration(
