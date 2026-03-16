@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/database/app_database.dart';
@@ -8,14 +9,12 @@ final transferProvider = StreamProvider.family<EmbryoTransfer?, int>(
       ref.watch(transferRepositoryProvider).watchForCycle(cycleId),
 );
 
-final transferEditorProvider =
-    AsyncNotifierProvider.family<TransferEditorNotifier, void, int>(
-      TransferEditorNotifier.new,
-    );
+class TransferEditorNotifier extends AsyncNotifier<void> {
+  final int cycleIdArg;
+  TransferEditorNotifier(this.cycleIdArg);
 
-class TransferEditorNotifier extends FamilyAsyncNotifier<void, int> {
   @override
-  Future<void> build(int arg) async {}
+  FutureOr<void> build() async {}
 
   Future<void> save({
     int? embryosTransferred,
@@ -23,11 +22,10 @@ class TransferEditorNotifier extends FamilyAsyncNotifier<void, int> {
     int? embryosFrozen,
     String? cryoDevice,
   }) async {
-    await ref
-        .read(transferRepositoryProvider)
-        .upsert(
+    final repo = ref.read(transferRepositoryProvider);
+    await repo.upsert(
           EmbryoTransfersCompanion(
-            cycleId: Value(arg),
+            cycleId: Value(cycleIdArg),
             embryosTransferred: Value(embryosTransferred),
             transferDate: Value(transferDate),
             embryosFrozen: Value(embryosFrozen),
@@ -36,3 +34,8 @@ class TransferEditorNotifier extends FamilyAsyncNotifier<void, int> {
         );
   }
 }
+
+final transferEditorProvider =
+    AsyncNotifierProvider.family<TransferEditorNotifier, void, int>(
+      (arg) => TransferEditorNotifier(arg),
+    );

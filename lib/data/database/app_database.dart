@@ -10,6 +10,7 @@ part 'app_database.g.dart';
 
 class IvfCycles extends Table {
   late final id = integer().autoIncrement()();
+  late final cycleIdentifier = text().nullable()();
   late final husbandName = text()();
   late final wifeName = text()();
   late final husbandAge = integer()();
@@ -17,6 +18,7 @@ class IvfCycles extends Table {
   late final amh = real().nullable()();
   late final bmi = real().nullable()();
   late final infertilityType = text().nullable()();
+  late final otherInfertilityType = text().nullable()();
   late final stimProtocol = text().nullable()();
   late final semenVolume = real().nullable()();
   late final spermConc = real().nullable()();
@@ -30,6 +32,7 @@ class IvfCycles extends Table {
   late final oocyteMii = integer().nullable()();
   late final oocyteMi = integer().nullable()();
   late final oocyteGv = integer().nullable()();
+  late final totalBlastocysts = integer().nullable()();
   late final createdAt = dateTime().withDefault(currentDateAndTime)();
   late final updatedAt = dateTime().withDefault(currentDateAndTime)();
 }

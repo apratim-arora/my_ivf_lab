@@ -4,10 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/database/app_database.dart';
 import '../../shared/widgets/section_card.dart';
 import '../../shared/widgets/labeled_field.dart';
 import '../../shared/widgets/metrics_card.dart';
 import 'cycle_form_notifier.dart';
+import 'metrics_providers.dart';
+import '../daily_observation/blastocyst/blastocyst_notifier.dart';
+import '../transfer/transfer_notifier.dart';
 
 class CycleFormScreen extends ConsumerStatefulWidget {
   final int? cycleId;
@@ -25,6 +29,7 @@ class _CycleFormScreenState extends ConsumerState<CycleFormScreen> {
   final _wifeName = TextEditingController();
   final _husbandAge = TextEditingController();
   final _wifeAge = TextEditingController();
+  final _cycleIdentifier = TextEditingController();
 
   bool _patientSaved = false;
   int? _activeCycleId;
@@ -37,7 +42,13 @@ class _CycleFormScreenState extends ConsumerState<CycleFormScreen> {
 
   @override
   void dispose() {
-    for (final c in [_husbandName, _wifeName, _husbandAge, _wifeAge]) {
+    for (final c in [
+      _husbandName,
+      _wifeName,
+      _husbandAge,
+      _wifeAge,
+      _cycleIdentifier,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -54,6 +65,13 @@ class _CycleFormScreenState extends ConsumerState<CycleFormScreen> {
       husbandAge: int.parse(_husbandAge.text),
       wifeAge: int.parse(_wifeAge.text),
     );
+
+    if (_cycleIdentifier.text.isNotEmpty) {
+      await notifier.save(
+        IvfCyclesCompanion(cycleIdentifier: Value(_cycleIdentifier.text.trim())),
+      );
+    }
+
     setState(() {
       _activeCycleId = id;
       _patientSaved = true;
@@ -64,9 +82,6 @@ class _CycleFormScreenState extends ConsumerState<CycleFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cycleAsync = ref.watch(cycleFormProvider(_activeCycleId));
-    final notifier = ref.read(cycleFormProvider(_activeCycleId).notifier);
-
     return Scaffold(
       appBar: AppBar(
         title: Text(_activeCycleId == null ? 'New cycle' : 'Cycle record'),
@@ -88,6 +103,11 @@ class _CycleFormScreenState extends ConsumerState<CycleFormScreen> {
                   onChanged: (v) => _wifeName.text = v,
                   validator: (v) =>
                       (v == null || v.trim().isEmpty) ? 'Required' : null,
+                ),
+                LabeledField(
+                  label: 'Cycle Identifier',
+                  initialValue: _cycleIdentifier.text,
+                  onChanged: (v) => _cycleIdentifier.text = v,
                 ),
                 LabeledField(
                   label: 'Husband name',
@@ -140,12 +160,7 @@ class _CycleFormScreenState extends ConsumerState<CycleFormScreen> {
             // Only render remaining sections once cycle exists
             if (_activeCycleId != null) ...[
               // ── Metrics banner ────────────────────────────────────────
-              cycleAsync.when(
-                loading: () => const SizedBox.shrink(),
-                error: (_, _) => const SizedBox.shrink(),
-                data: (cycle) =>
-                    MetricsCard(maturationRate: notifier.maturationRate),
-              ),
+              _MetricsBanner(cycleId: _activeCycleId!),
 
               // ── Clinical parameters ───────────────────────────────────
               _ClinicalSection(cycleId: _activeCycleId!),
@@ -177,6 +192,24 @@ class _CycleFormScreenState extends ConsumerState<CycleFormScreen> {
   }
 }
 
+class _MetricsBanner extends ConsumerWidget {
+  final int cycleId;
+  const _MetricsBanner({required this.cycleId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final matRate = ref.watch(maturationRateProvider(cycleId));
+    final fertRate = ref.watch(fertilizationRateProvider(cycleId));
+    final blastRate = ref.watch(blastulationRateProvider(cycleId));
+
+    return MetricsCard(
+      maturationRate: matRate,
+      fertilizationRate: fertRate,
+      blastulationRate: blastRate,
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Sub-sections (each autosaves on field change)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -187,7 +220,8 @@ class _ClinicalSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cycle = ref.watch(cycleFormProvider(cycleId)).valueOrNull;
+    final cycleAsync = ref.watch(cycleFormProvider(cycleId));
+    final cycle = cycleAsync.asData?.value;
     final notifier = ref.read(cycleFormProvider(cycleId).notifier);
 
     return SectionCard(
@@ -211,6 +245,17 @@ class _ClinicalSection extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         _InfertilityDropdown(cycleId: cycleId),
+        if (cycle?.infertilityType == 'Other')
+          LabeledField(
+            label: 'Specify infertility type',
+            initialValue: cycle?.otherInfertilityType,
+            onChanged:
+                (v) => notifier.save(
+                  IvfCyclesCompanion(
+                    otherInfertilityType: Value(v.isEmpty ? null : v),
+                  ),
+                ),
+          ),
         LabeledField(
           label: 'Stimulation protocol',
           initialValue: cycle?.stimProtocol,
@@ -237,7 +282,8 @@ class _InfertilityDropdown extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cycle = ref.watch(cycleFormProvider(cycleId)).valueOrNull;
+    final cycleAsync = ref.watch(cycleFormProvider(cycleId));
+    final cycle = cycleAsync.asData?.value;
     final notifier = ref.read(cycleFormProvider(cycleId).notifier);
 
     return Padding(
@@ -267,7 +313,8 @@ class _SemenSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cycle = ref.watch(cycleFormProvider(cycleId)).valueOrNull;
+    final cycleAsync = ref.watch(cycleFormProvider(cycleId));
+    final cycle = cycleAsync.asData?.value;
     final notifier = ref.read(cycleFormProvider(cycleId).notifier);
     final isComplete = cycle?.semenVolume != null || cycle?.spermConc != null;
 
@@ -360,7 +407,8 @@ class _TimingSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cycle = ref.watch(cycleFormProvider(cycleId)).valueOrNull;
+    final cycleAsync = ref.watch(cycleFormProvider(cycleId));
+    final cycle = cycleAsync.asData?.value;
     final notifier = ref.read(cycleFormProvider(cycleId).notifier);
 
     Future<void> pickDate() async {
@@ -440,9 +488,16 @@ class _OocyteSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cycle = ref.watch(cycleFormProvider(cycleId)).valueOrNull;
+    final cycleAsync = ref.watch(cycleFormProvider(cycleId));
+    final cycle = cycleAsync.asData?.value;
     final notifier = ref.read(cycleFormProvider(cycleId).notifier);
     final isComplete = cycle?.occRecovered != null;
+
+    final mii = cycle?.oocyteMii ?? 0;
+    final mi = cycle?.oocyteMi ?? 0;
+    final gv = cycle?.oocyteGv ?? 0;
+    final occ = cycle?.occRecovered ?? 0;
+    final showWarning = (mii + mi + gv) > occ;
 
     return SectionCard(
       title: 'Oocyte retrieval',
@@ -457,9 +512,10 @@ class _OocyteSection extends ConsumerWidget {
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 initialValue: cycle?.occRecovered?.toString(),
-                onChanged: (v) => notifier.save(
-                  IvfCyclesCompanion(occRecovered: Value(int.tryParse(v))),
-                ),
+                onChanged:
+                    (v) => notifier.save(
+                      IvfCyclesCompanion(occRecovered: Value(int.tryParse(v))),
+                    ),
               ),
             ),
             const SizedBox(width: 8),
@@ -469,9 +525,10 @@ class _OocyteSection extends ConsumerWidget {
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 initialValue: cycle?.oocyteMii?.toString(),
-                onChanged: (v) => notifier.save(
-                  IvfCyclesCompanion(oocyteMii: Value(int.tryParse(v))),
-                ),
+                onChanged:
+                    (v) => notifier.save(
+                      IvfCyclesCompanion(oocyteMii: Value(int.tryParse(v))),
+                    ),
               ),
             ),
             const SizedBox(width: 8),
@@ -481,9 +538,10 @@ class _OocyteSection extends ConsumerWidget {
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 initialValue: cycle?.oocyteMi?.toString(),
-                onChanged: (v) => notifier.save(
-                  IvfCyclesCompanion(oocyteMi: Value(int.tryParse(v))),
-                ),
+                onChanged:
+                    (v) => notifier.save(
+                      IvfCyclesCompanion(oocyteMi: Value(int.tryParse(v))),
+                    ),
               ),
             ),
             const SizedBox(width: 8),
@@ -493,13 +551,30 @@ class _OocyteSection extends ConsumerWidget {
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 initialValue: cycle?.oocyteGv?.toString(),
-                onChanged: (v) => notifier.save(
-                  IvfCyclesCompanion(oocyteGv: Value(int.tryParse(v))),
-                ),
+                onChanged:
+                    (v) => notifier.save(
+                      IvfCyclesCompanion(oocyteGv: Value(int.tryParse(v))),
+                    ),
               ),
             ),
           ],
         ),
+        if (showWarning)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.orange[700], size: 16),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    'Warning: Sum of MII+MI+GV (${mii + mi + gv}) exceeds OCC recovered ($occ)',
+                    style: TextStyle(color: Colors.orange[700], fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -516,7 +591,7 @@ class _DayLinksSection extends StatelessWidget {
       icon: Icons.calendar_month_outlined,
       initiallyExpanded: true,
       children: [
-        for (final day in [1, 2, 3, 5])
+        for (final day in [1, 2, 3, 5]) ...[
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: CircleAvatar(
@@ -527,6 +602,7 @@ class _DayLinksSection extends StatelessWidget {
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () => context.push('/cycle/$cycleId/day/$day'),
           ),
+        ],
       ],
     );
   }
@@ -549,14 +625,38 @@ class _BlastSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final cycleAsync = ref.watch(cycleFormProvider(cycleId));
+    final cycle = cycleAsync.asData?.value;
+    final notifier = ref.read(cycleFormProvider(cycleId).notifier);
     final gradesAsync = ref.watch(blastocystProvider(cycleId));
     final editor = ref.read(blastocystEditorProvider(cycleId).notifier);
 
     return SectionCard(
       title: 'Blastocyst grading (Day 5)',
       icon: Icons.bubble_chart_outlined,
-      isComplete: gradesAsync.valueOrNull?.isNotEmpty ?? false,
+      isComplete:
+          (cycle?.totalBlastocysts != null) ||
+          (gradesAsync.asData?.value.isNotEmpty ?? false),
       children: [
+        LabeledField(
+          label: 'Total Blastocysts (Option B)',
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          initialValue: cycle?.totalBlastocysts?.toString(),
+          onChanged:
+              (v) => notifier.save(
+                IvfCyclesCompanion(totalBlastocysts: Value(int.tryParse(v))),
+              ),
+        ),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Divider(),
+        ),
+        Text(
+          'Individual Grades (Option A)',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 8),
         gradesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Text('Error: $e'),
@@ -605,7 +705,9 @@ class _GradeEditorState extends State<_GradeEditor> {
 
   @override
   void dispose() {
-    for (final c in _controllers.values) c.dispose();
+    for (final c in _controllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -637,7 +739,9 @@ class _GradeEditorState extends State<_GradeEditor> {
                   border: const OutlineInputBorder(),
                   isDense: true,
                 ),
-                onChanged: (_) => _save(),
+                onChanged: (_) {
+                  _save();
+                },
               ),
             );
           }).toList(),
@@ -661,7 +765,7 @@ class _TransferSection extends ConsumerWidget {
     return SectionCard(
       title: 'Transfer & freezing',
       icon: Icons.ac_unit_outlined,
-      isComplete: transferAsync.valueOrNull != null,
+      isComplete: transferAsync.asData?.value != null,
       children: [
         transferAsync.when(
           loading: () => const SizedBox.shrink(),

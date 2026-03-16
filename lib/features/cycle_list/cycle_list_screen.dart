@@ -44,7 +44,7 @@ class _CycleListScreenState extends ConsumerState<CycleListScreen> {
             child: TextField(
               controller: _searchCtrl,
               decoration: InputDecoration(
-                hintText: 'Search by patient name…',
+                hintText: 'Search by name or identifier…',
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _query.isNotEmpty
                     ? IconButton(
@@ -115,10 +115,29 @@ class _CycleTile extends StatelessWidget {
         ? DateFormat('dd MMM yyyy').format(cycle.oocytePickupDate!)
         : 'No pickup date';
 
+    int? currentDay;
+    if (cycle.oocytePickupDate != null) {
+      final diff = DateTime.now().difference(cycle.oocytePickupDate!).inDays;
+      if (diff >= 0 && diff <= 6) {
+        currentDay = diff == 0 ? 1 : (diff == 1 ? 2 : (diff == 2 ? 3 : 5));
+      }
+    }
+
     return ListTile(
       leading: CircleAvatar(child: Text(cycle.wifeName[0].toUpperCase())),
       title: Text('${cycle.wifeName}  /  ${cycle.husbandName}'),
-      subtitle: Text(pickupStr),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (cycle.cycleIdentifier != null &&
+              cycle.cycleIdentifier!.isNotEmpty)
+            Text(
+              'ID: ${cycle.cycleIdentifier}',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+          Text('$pickupStr${currentDay != null ? "  ·  Day $currentDay" : ""}'),
+        ],
+      ),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => context.push('/cycle/${cycle.id}'),
     );
