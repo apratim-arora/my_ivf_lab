@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'core/theme/app_theme.dart';
 import 'features/cycle_list/cycle_list_screen.dart';
 import 'features/cycle_form/cycle_form_screen.dart';
 import 'features/daily_observation/daily_obs_screen.dart';
@@ -79,18 +80,9 @@ class EmbryologyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'EmbryoLog',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B6CA8)),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1B6CA8),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
       routerConfig: router,
+      debugShowCheckedModeBanner: false,
     );
   }
 }

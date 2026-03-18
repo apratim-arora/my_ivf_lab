@@ -26,11 +26,12 @@ class DailyObsScreen extends ConsumerWidget {
     final notifier = ref.read(dailyObsProvider(key).notifier);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Day $day observations')),
+      appBar: AppBar(title: Text('Day $day Observations')),
       body: obsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (obs) => ListView(
+          padding: const EdgeInsets.symmetric(vertical: 20),
           children: [
             if (day == 1)
               _Day1Form(cycleId: cycleId, obs: obs, notifier: notifier),
@@ -52,51 +53,32 @@ class _Day5Form extends ConsumerWidget {
   final int cycleId;
   const _Day5Form({required this.cycleId});
 
-  static const _grades = [
-    '3AA',
-    '4AA',
-    '5AA',
-    '3AB',
-    '4AB',
-    '3BB',
-    '4BB',
-    'other',
-  ];
+  static const _grades = ['3AA', '4AA', '5AA', '3AB', '4AB', '3BB', '4BB', 'other'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cycleAsync = ref.watch(cycleFormProvider(cycleId));
-    final cycle = cycleAsync.asData?.value;
     final cycleNotifier = ref.read(cycleFormProvider(cycleId).notifier);
     final gradesAsync = ref.watch(blastocystProvider(cycleId));
     final editor = ref.read(blastocystEditorProvider(cycleId).notifier);
 
     return SectionCard(
-      title: 'Day 5 — Blastocysts',
+      title: 'Blastocysts',
       icon: Icons.bubble_chart_outlined,
       initiallyExpanded: true,
-      isComplete:
-          (cycle?.totalBlastocysts != null) ||
-          (gradesAsync.asData?.value.isNotEmpty ?? false),
       children: [
         LabeledField(
           label: 'Total Blastocysts (Option B)',
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          initialValue: cycle?.totalBlastocysts?.toString(),
+          initialValue: cycleAsync.asData?.value?.totalBlastocysts?.toString(),
           onChanged: (v) => cycleNotifier.save(
             IvfCyclesCompanion(totalBlastocysts: Value(int.tryParse(v))),
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Divider(),
-        ),
-        Text(
-          'Individual Grades (Option A)',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: 8),
+        const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider()),
+        Text('Individual Grades (Option A)', style: Theme.of(context).textTheme.labelMedium),
+        const SizedBox(height: 12),
         gradesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Text('Error: $e'),
@@ -137,17 +119,13 @@ class _GradeEditorInlineState extends State<_GradeEditorInline> {
     super.initState();
     _controllers = {
       for (final g in widget.grades)
-        g: TextEditingController(
-          text: (widget.initialValues[g] ?? 0).toString(),
-        ),
+        g: TextEditingController(text: (widget.initialValues[g] ?? 0).toString()),
     };
   }
 
   @override
   void dispose() {
-    for (final c in _controllers.values) {
-      c.dispose();
-    }
+    for (final c in _controllers.values) c.dispose();
     super.dispose();
   }
 
@@ -162,140 +140,128 @@ class _GradeEditorInlineState extends State<_GradeEditorInline> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          children: widget.grades.map((g) {
-            return SizedBox(
-              width: 80,
-              child: TextField(
-                controller: _controllers[g],
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: InputDecoration(
-                  labelText: g,
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
-                onChanged: (_) {
-                  _save();
-                },
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: widget.grades.map((g) {
+        return SizedBox(
+          width: (MediaQuery.of(context).size.width - 64) / 3,
+          child: TextField(
+            controller: _controllers[g],
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(labelText: g, border: const OutlineInputBorder(), isDense: true),
+            onChanged: (_) => _save(),
+          ),
+        );
+      }).toList(),
     );
   }
 }
 
-class _Day1Form extends ConsumerWidget {
+class _Day1Form extends StatefulWidget {
   final int cycleId;
   final DayObservation? obs;
   final DailyObsNotifier notifier;
-  const _Day1Form({
-    required this.cycleId,
-    required this.obs,
-    required this.notifier,
-  });
-
-  void _save(DayObservationsCompanion c) => notifier.save(c);
+  const _Day1Form({required this.cycleId, required this.obs, required this.notifier});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final cycleAsync = ref.watch(cycleFormProvider(cycleId));
-    final cycle = cycleAsync.asData?.value;
-    final mii = cycle?.oocyteMii ?? 0;
-    final totalDay1 = (obs?.twoPN2PB ?? 0) + (obs?.twoPBOnly ?? 0) + (obs?.necrotic ?? 0);
-    final showWarning = cycle?.oocyteMii != null && totalDay1 > mii;
+  State<_Day1Form> createState() => _Day1FormState();
+}
 
+class _Day1FormState extends State<_Day1Form> {
+  final _2pn = TextEditingController();
+  final _2pb = TextEditingController();
+  final _necro = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _2pn.text = widget.obs?.twoPN2PB?.toString() ?? '';
+    _2pb.text = widget.obs?.twoPBOnly?.toString() ?? '';
+    _necro.text = widget.obs?.necrotic?.toString() ?? '';
+  }
+
+  @override
+  void dispose() {
+    _2pn.dispose();
+    _2pb.dispose();
+    _necro.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    widget.notifier.save(DayObservationsCompanion(
+      cycleId: Value(widget.cycleId),
+      dayNumber: const Value(1),
+      twoPN2PB: Value(int.tryParse(_2pn.text)),
+      twoPBOnly: Value(int.tryParse(_2pb.text)),
+      necrotic: Value(int.tryParse(_necro.text)),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return SectionCard(
       title: 'Day 1 — Fertilization',
       icon: Icons.looks_one_outlined,
       initiallyExpanded: true,
-      isComplete: obs != null,
       children: [
-        if (showWarning)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange[700]!),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Warning: Total Day 1 embryos ($totalDay1) exceeds injected oocytes (MII: $mii)',
-                      style: TextStyle(color: Colors.orange[700], fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        LabeledField(
-          label: '2PN 2PB embryos',
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          initialValue: obs?.twoPN2PB?.toString(),
-          onChanged: (v) => _save(
-            DayObservationsCompanion(
-              cycleId: Value(cycleId),
-              dayNumber: const Value(1),
-              twoPN2PB: Value(int.tryParse(v)),
-            ),
-          ),
-        ),
-        LabeledField(
-          label: '2PB only',
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          initialValue: obs?.twoPBOnly?.toString(),
-          onChanged: (v) => _save(
-            DayObservationsCompanion(
-              cycleId: Value(cycleId),
-              dayNumber: const Value(1),
-              twoPBOnly: Value(int.tryParse(v)),
-            ),
-          ),
-        ),
-        LabeledField(
-          label: 'Necrotic',
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          initialValue: obs?.necrotic?.toString(),
-          onChanged: (v) => _save(
-            DayObservationsCompanion(
-              cycleId: Value(cycleId),
-              dayNumber: const Value(1),
-              necrotic: Value(int.tryParse(v)),
-            ),
-          ),
-        ),
+        LabeledField(label: '2PN 2PB Embryos', controller: _2pn, keyboardType: TextInputType.number, onChanged: (_) => _save()),
+        LabeledField(label: '2PB Only', controller: _2pb, keyboardType: TextInputType.number, onChanged: (_) => _save()),
+        LabeledField(label: 'Necrotic', controller: _necro, keyboardType: TextInputType.number, onChanged: (_) => _save()),
       ],
     );
   }
 }
 
-class _Day2Form extends StatelessWidget {
+class _Day2Form extends StatefulWidget {
   final int cycleId;
   final DayObservation? obs;
   final DailyObsNotifier notifier;
-  const _Day2Form({
-    required this.cycleId,
-    required this.obs,
-    required this.notifier,
-  });
+  const _Day2Form({required this.cycleId, required this.obs, required this.notifier});
 
-  void _save(DayObservationsCompanion c) => notifier.save(c);
+  @override
+  State<_Day2Form> createState() => _Day2FormState();
+}
+
+class _Day2FormState extends State<_Day2Form> {
+  final _2pnArr = TextEditingController();
+  final _4cellG1 = TextEditingController();
+  final _4cellG2 = TextEditingController();
+  final _2cell = TextEditingController();
+  final _3cell = TextEditingController();
+  final _5cell = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _2pnArr.text = widget.obs?.twoPNArrest?.toString() ?? '';
+    _4cellG1.text = widget.obs?.fourCellG1?.toString() ?? '';
+    _4cellG2.text = widget.obs?.fourCellG2?.toString() ?? '';
+    _2cell.text = widget.obs?.twoCells?.toString() ?? '';
+    _3cell.text = widget.obs?.threeCells?.toString() ?? '';
+    _5cell.text = widget.obs?.fiveCells?.toString() ?? '';
+  }
+
+  @override
+  void dispose() {
+    for (final c in [_2pnArr, _4cellG1, _4cellG2, _2cell, _3cell, _5cell]) c.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    widget.notifier.save(DayObservationsCompanion(
+      cycleId: Value(widget.cycleId),
+      dayNumber: const Value(2),
+      twoPNArrest: Value(int.tryParse(_2pnArr.text)),
+      fourCellG1: Value(int.tryParse(_4cellG1.text)),
+      fourCellG2: Value(int.tryParse(_4cellG2.text)),
+      twoCells: Value(int.tryParse(_2cell.text)),
+      threeCells: Value(int.tryParse(_3cell.text)),
+      fiveCells: Value(int.tryParse(_5cell.text)),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -303,99 +269,56 @@ class _Day2Form extends StatelessWidget {
       title: 'Day 2 — Cleavage',
       icon: Icons.looks_two_outlined,
       initiallyExpanded: true,
-      isComplete: obs != null,
       children: [
-        for (final entry in [
-          (
-            '2PN arrest',
-            obs?.twoPNArrest,
-            (String v) => _save(
-              DayObservationsCompanion(
-                cycleId: Value(cycleId),
-                dayNumber: const Value(2),
-                twoPNArrest: Value(int.tryParse(v)),
-              ),
-            ),
-          ),
-          (
-            '4-cell G1',
-            obs?.fourCellG1,
-            (String v) => _save(
-              DayObservationsCompanion(
-                cycleId: Value(cycleId),
-                dayNumber: const Value(2),
-                fourCellG1: Value(int.tryParse(v)),
-              ),
-            ),
-          ),
-          (
-            '4-cell G2',
-            obs?.fourCellG2,
-            (String v) => _save(
-              DayObservationsCompanion(
-                cycleId: Value(cycleId),
-                dayNumber: const Value(2),
-                fourCellG2: Value(int.tryParse(v)),
-              ),
-            ),
-          ),
-          (
-            '2-cell',
-            obs?.twoCells,
-            (String v) => _save(
-              DayObservationsCompanion(
-                cycleId: Value(cycleId),
-                dayNumber: const Value(2),
-                twoCells: Value(int.tryParse(v)),
-              ),
-            ),
-          ),
-          (
-            '3-cell',
-            obs?.threeCells,
-            (String v) => _save(
-              DayObservationsCompanion(
-                cycleId: Value(cycleId),
-                dayNumber: const Value(2),
-                threeCells: Value(int.tryParse(v)),
-              ),
-            ),
-          ),
-          (
-            '5-cell',
-            obs?.fiveCells,
-            (String v) => _save(
-              DayObservationsCompanion(
-                cycleId: Value(cycleId),
-                dayNumber: const Value(2),
-                fiveCells: Value(int.tryParse(v)),
-              ),
-            ),
-          ),
-        ])
-          LabeledField(
-            label: entry.$1,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            initialValue: entry.$2?.toString(),
-            onChanged: entry.$3,
-          ),
+        LabeledField(label: '2PN Arrest', controller: _2pnArr, keyboardType: TextInputType.number, onChanged: (_) => _save()),
+        LabeledField(label: '4-Cell G1', controller: _4cellG1, keyboardType: TextInputType.number, onChanged: (_) => _save()),
+        LabeledField(label: '4-Cell G2', controller: _4cellG2, keyboardType: TextInputType.number, onChanged: (_) => _save()),
+        LabeledField(label: '2-Cell', controller: _2cell, keyboardType: TextInputType.number, onChanged: (_) => _save()),
+        LabeledField(label: '3-Cell', controller: _3cell, keyboardType: TextInputType.number, onChanged: (_) => _save()),
+        LabeledField(label: '5-Cell', controller: _5cell, keyboardType: TextInputType.number, onChanged: (_) => _save()),
       ],
     );
   }
 }
 
-class _Day3Form extends StatelessWidget {
+class _Day3Form extends StatefulWidget {
   final int cycleId;
   final DayObservation? obs;
   final DailyObsNotifier notifier;
-  const _Day3Form({
-    required this.cycleId,
-    required this.obs,
-    required this.notifier,
-  });
+  const _Day3Form({required this.cycleId, required this.obs, required this.notifier});
 
-  void _save(DayObservationsCompanion c) => notifier.save(c);
+  @override
+  State<_Day3Form> createState() => _Day3FormState();
+}
+
+class _Day3FormState extends State<_Day3Form> {
+  final _8cellG1 = TextEditingController();
+  final _8cellG2 = TextEditingController();
+  final _4cellArr = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _8cellG1.text = widget.obs?.eightCellG1?.toString() ?? '';
+    _8cellG2.text = widget.obs?.eightCellG2?.toString() ?? '';
+    _4cellArr.text = widget.obs?.fourCellArrest?.toString() ?? '';
+  }
+
+  @override
+  void dispose() {
+    for (final c in [_8cellG1, _8cellG2, _4cellArr]) c.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    widget.notifier.save(DayObservationsCompanion(
+      cycleId: Value(widget.cycleId),
+      dayNumber: const Value(3),
+      eightCellG1: Value(int.tryParse(_8cellG1.text)),
+      eightCellG2: Value(int.tryParse(_8cellG2.text)),
+      fourCellArrest: Value(int.tryParse(_4cellArr.text)),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -403,50 +326,10 @@ class _Day3Form extends StatelessWidget {
       title: 'Day 3 — Cleavage',
       icon: Icons.looks_3_outlined,
       initiallyExpanded: true,
-      isComplete: obs != null,
       children: [
-        for (final entry in [
-          (
-            '8-cell G1',
-            obs?.eightCellG1,
-            (String v) => _save(
-              DayObservationsCompanion(
-                cycleId: Value(cycleId),
-                dayNumber: const Value(3),
-                eightCellG1: Value(int.tryParse(v)),
-              ),
-            ),
-          ),
-          (
-            '8-cell G2',
-            obs?.eightCellG2,
-            (String v) => _save(
-              DayObservationsCompanion(
-                cycleId: Value(cycleId),
-                dayNumber: const Value(3),
-                eightCellG2: Value(int.tryParse(v)),
-              ),
-            ),
-          ),
-          (
-            '4-cell arrest',
-            obs?.fourCellArrest,
-            (String v) => _save(
-              DayObservationsCompanion(
-                cycleId: Value(cycleId),
-                dayNumber: const Value(3),
-                fourCellArrest: Value(int.tryParse(v)),
-              ),
-            ),
-          ),
-        ])
-          LabeledField(
-            label: entry.$1,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            initialValue: entry.$2?.toString(),
-            onChanged: entry.$3,
-          ),
+        LabeledField(label: '8-Cell G1', controller: _8cellG1, keyboardType: TextInputType.number, onChanged: (_) => _save()),
+        LabeledField(label: '8-Cell G2', controller: _8cellG2, keyboardType: TextInputType.number, onChanged: (_) => _save()),
+        LabeledField(label: '4-Cell Arrest', controller: _4cellArr, keyboardType: TextInputType.number, onChanged: (_) => _save()),
       ],
     );
   }

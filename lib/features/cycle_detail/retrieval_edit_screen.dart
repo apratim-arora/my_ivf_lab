@@ -19,18 +19,7 @@ class _RetrievalEditScreenState extends ConsumerState<RetrievalEditScreen> {
   final _mii = TextEditingController();
   final _mi = TextEditingController();
   final _gv = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    final cycle = ref.read(cycleFormProvider(widget.cycleId)).asData?.value;
-    if (cycle != null) {
-      _occ.text = cycle.occRecovered?.toString() ?? '';
-      _mii.text = cycle.oocyteMii?.toString() ?? '';
-      _mi.text = cycle.oocyteMi?.toString() ?? '';
-      _gv.text = cycle.oocyteGv?.toString() ?? '';
-    }
-  }
+  bool _initialized = false;
 
   @override
   void dispose() {
@@ -39,6 +28,15 @@ class _RetrievalEditScreenState extends ConsumerState<RetrievalEditScreen> {
     _mi.dispose();
     _gv.dispose();
     super.dispose();
+  }
+
+  void _sync(IvfCycle cycle) {
+    if (_initialized) return;
+    _occ.text = cycle.occRecovered?.toString() ?? '';
+    _mii.text = cycle.oocyteMii?.toString() ?? '';
+    _mi.text = cycle.oocyteMi?.toString() ?? '';
+    _gv.text = cycle.oocyteGv?.toString() ?? '';
+    _initialized = true;
   }
 
   void _save() {
@@ -54,6 +52,9 @@ class _RetrievalEditScreenState extends ConsumerState<RetrievalEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cycleAsync = ref.watch(cycleFormProvider(widget.cycleId));
+    cycleAsync.whenData((c) { if (c != null) _sync(c); });
+
     final mii = int.tryParse(_mii.text) ?? 0;
     final mi = int.tryParse(_mi.text) ?? 0;
     final gv = int.tryParse(_gv.text) ?? 0;
@@ -61,38 +62,45 @@ class _RetrievalEditScreenState extends ConsumerState<RetrievalEditScreen> {
     final showWarning = (mii + mi + gv) > occ;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Oocyte Retrieval')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          LabeledField(label: 'OCC Recovered', controller: _occ, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], onChanged: (_) => setState(() => _save())),
-          const Divider(height: 32),
-          Row(
-            children: [
-              Expanded(child: LabeledField(label: 'MII', controller: _mii, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], onChanged: (_) => setState(() => _save()))),
-              const SizedBox(width: 8),
-              Expanded(child: LabeledField(label: 'MI', controller: _mi, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], onChanged: (_) => setState(() => _save()))),
-              const SizedBox(width: 8),
-              Expanded(child: LabeledField(label: 'GV', controller: _gv, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], onChanged: (_) => setState(() => _save()))),
-            ],
-          ),
-          if (showWarning)
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Row(
-                children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Warning: Sum of MII+MI+GV (${mii + mi + gv}) exceeds OCC recovered ($occ)',
-                      style: TextStyle(color: Colors.orange[700], fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
+      appBar: AppBar(title: const Text('Oocyte Retrieval')),
+      body: cycleAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
+        data: (_) => ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            LabeledField(label: 'OCC Recovered', controller: _occ, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], onChanged: (_) => setState(() => _save())),
+            const Divider(height: 40),
+            Row(
+              children: [
+                Expanded(child: LabeledField(label: 'MII', controller: _mii, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], onChanged: (_) => setState(() => _save()))),
+                const SizedBox(width: 8),
+                Expanded(child: LabeledField(label: 'MI', controller: _mi, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], onChanged: (_) => setState(() => _save()))),
+                const SizedBox(width: 8),
+                Expanded(child: LabeledField(label: 'GV', controller: _gv, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], onChanged: (_) => setState(() => _save()))),
+              ],
             ),
-        ],
+            if (showWarning)
+              Padding(
+                padding: const EdgeInsets.only(top: 24),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text('Warning: Oocyte counts exceed recovered total.', style: TextStyle(color: Colors.orange[900], fontSize: 13))),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

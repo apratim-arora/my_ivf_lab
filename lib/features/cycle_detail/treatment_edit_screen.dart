@@ -16,6 +16,7 @@ class _TreatmentEditScreenState extends ConsumerState<TreatmentEditScreen> {
   String? _type;
   final _otherType = TextEditingController();
   final _protocol = TextEditingController();
+  bool _initialized = false;
 
   static const _options = [
     'Primary infertility',
@@ -26,21 +27,18 @@ class _TreatmentEditScreenState extends ConsumerState<TreatmentEditScreen> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-    final cycle = ref.read(cycleFormProvider(widget.cycleId)).asData?.value;
-    if (cycle != null) {
-      _type = cycle.infertilityType;
-      _otherType.text = cycle.otherInfertilityType ?? '';
-      _protocol.text = cycle.stimProtocol ?? '';
-    }
-  }
-
-  @override
   void dispose() {
     _otherType.dispose();
     _protocol.dispose();
     super.dispose();
+  }
+
+  void _sync(IvfCycle cycle) {
+    if (_initialized) return;
+    _type = cycle.infertilityType;
+    _otherType.text = cycle.otherInfertilityType ?? '';
+    _protocol.text = cycle.stimProtocol ?? '';
+    _initialized = true;
   }
 
   void _save() {
@@ -55,41 +53,43 @@ class _TreatmentEditScreenState extends ConsumerState<TreatmentEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cycleAsync = ref.watch(cycleFormProvider(widget.cycleId));
+    cycleAsync.whenData((c) { if (c != null) _sync(c); });
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Treatment')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          DropdownButtonFormField<String>(
-            initialValue: _options.contains(_type) ? _type : null,
-            decoration: const InputDecoration(
-              labelText: 'Infertility Type',
-              border: OutlineInputBorder(),
+      appBar: AppBar(title: const Text('Treatment')),
+      body: cycleAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
+        data: (_) => ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            DropdownButtonFormField<String>(
+              initialValue: _options.contains(_type) ? _type : null,
+              decoration: const InputDecoration(labelText: 'Infertility Type', border: OutlineInputBorder()),
+              items: _options.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
+              onChanged: (v) {
+                setState(() => _type = v);
+                _save();
+              },
             ),
-            items: _options
-                .map((o) => DropdownMenuItem(value: o, child: Text(o)))
-                .toList(),
-            onChanged: (v) {
-              setState(() => _type = v);
-              _save();
-            },
-          ),
-          if (_type == 'Other')
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: TextField(
-                controller: _otherType,
-                decoration: const InputDecoration(labelText: 'Specify Type', border: OutlineInputBorder()),
-                onChanged: (_) => _save(),
+            if (_type == 'Other')
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: TextField(
+                  controller: _otherType,
+                  decoration: const InputDecoration(labelText: 'Specify Type', border: OutlineInputBorder()),
+                  onChanged: (_) => _save(),
+                ),
               ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _protocol,
+              decoration: const InputDecoration(labelText: 'Stimulation Protocol', border: OutlineInputBorder()),
+              onChanged: (_) => _save(),
             ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _protocol,
-            decoration: const InputDecoration(labelText: 'Stimulation Protocol', border: OutlineInputBorder()),
-            onChanged: (_) => _save(),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

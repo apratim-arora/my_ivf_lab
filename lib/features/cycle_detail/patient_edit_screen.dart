@@ -19,19 +19,7 @@ class _PatientEditScreenState extends ConsumerState<PatientEditScreen> {
   final _wifeAge = TextEditingController();
   final _husbandAge = TextEditingController();
   final _cycleId = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    final cycle = ref.read(cycleFormProvider(widget.cycleId)).asData?.value;
-    if (cycle != null) {
-      _wifeName.text = cycle.wifeName;
-      _husbandName.text = cycle.husbandName;
-      _wifeAge.text = cycle.wifeAge.toString();
-      _husbandAge.text = cycle.husbandAge.toString();
-      _cycleId.text = cycle.cycleIdentifier ?? '';
-    }
-  }
+  bool _initialized = false;
 
   @override
   void dispose() {
@@ -41,6 +29,16 @@ class _PatientEditScreenState extends ConsumerState<PatientEditScreen> {
     _husbandAge.dispose();
     _cycleId.dispose();
     super.dispose();
+  }
+
+  void _syncControllers(IvfCycle cycle) {
+    if (_initialized) return;
+    _wifeName.text = cycle.wifeName;
+    _husbandName.text = cycle.husbandName;
+    _wifeAge.text = cycle.wifeAge.toString();
+    _husbandAge.text = cycle.husbandAge.toString();
+    _cycleId.text = cycle.cycleIdentifier ?? '';
+    _initialized = true;
   }
 
   void _save() {
@@ -57,22 +55,35 @@ class _PatientEditScreenState extends ConsumerState<PatientEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cycleAsync = ref.watch(cycleFormProvider(widget.cycleId));
+
+    // Sync when data arrives
+    cycleAsync.whenData((cycle) {
+      if (cycle != null) _syncControllers(cycle);
+    });
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Patient')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          LabeledField(label: 'Wife Name', controller: _wifeName, onChanged: (_) => _save()),
-          LabeledField(label: 'Husband Name', controller: _husbandName, onChanged: (_) => _save()),
-          Row(
-            children: [
-              Expanded(child: LabeledField(label: 'Wife Age', controller: _wifeAge, keyboardType: TextInputType.number, onChanged: (_) => _save())),
-              const SizedBox(width: 12),
-              Expanded(child: LabeledField(label: 'Husband Age', controller: _husbandAge, keyboardType: TextInputType.number, onChanged: (_) => _save())),
-            ],
-          ),
-          LabeledField(label: 'Cycle Identifier', controller: _cycleId, onChanged: (_) => _save()),
-        ],
+      appBar: AppBar(title: const Text('Patient Details')),
+      body: cycleAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
+        data: (cycle) => ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            LabeledField(label: 'Wife Name', controller: _wifeName, onChanged: (_) => _save()),
+            LabeledField(label: 'Husband Name', controller: _husbandName, onChanged: (_) => _save()),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(child: LabeledField(label: 'Wife Age', controller: _wifeAge, keyboardType: TextInputType.number, onChanged: (_) => _save())),
+                const SizedBox(width: 16),
+                Expanded(child: LabeledField(label: 'Husband Age', controller: _husbandAge, keyboardType: TextInputType.number, onChanged: (_) => _save())),
+              ],
+            ),
+            const SizedBox(height: 12),
+            LabeledField(label: 'Cycle Identifier', controller: _cycleId, hint: 'e.g. LAB-2024-001', onChanged: (_) => _save()),
+          ],
+        ),
       ),
     );
   }

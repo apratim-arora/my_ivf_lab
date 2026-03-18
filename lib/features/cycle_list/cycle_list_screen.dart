@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/database/app_database.dart';
-import 'cycle_list_providers.dart';
+import '../cycle_list/cycle_list_providers.dart';
 
 class CycleListScreen extends ConsumerStatefulWidget {
   const CycleListScreen({super.key});
@@ -28,118 +28,128 @@ class _CycleListScreenState extends ConsumerState<CycleListScreen> {
     final cyclesAsync = ref.watch(cycleListProvider(_query));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('IVF cycles'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.biotech_outlined),
-            tooltip: 'Active cultures',
-            onPressed: () => context.push('/active'),
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-            child: TextField(
-              controller: _searchCtrl,
-              decoration: InputDecoration(
-                hintText: 'Search by name or identifier…',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _query.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchCtrl.clear();
-                          setState(() => _query = '');
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                isDense: true,
-                filled: true,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar.large(
+            title: const Text('Embryology Lab'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.biotech),
+                onPressed: () => context.push('/active'),
+                tooltip: 'Active Cultures',
               ),
-              onChanged: (v) => setState(() => _query = v),
+            ],
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: SearchBar(
+                controller: _searchCtrl,
+                hintText: 'Search patient or ID...',
+                elevation: const WidgetStatePropertyAll(0),
+                backgroundColor: WidgetStatePropertyAll(Colors.grey.withValues(alpha: 0.1)),
+                onChanged: (v) => setState(() => _query = v),
+                leading: const Icon(Icons.search, color: Colors.grey),
+                trailing: [
+                  if (_query.isNotEmpty)
+                    IconButton(icon: const Icon(Icons.close), onPressed: () {
+                      _searchCtrl.clear();
+                      setState(() => _query = '');
+                    }),
+                ],
+              ),
             ),
           ),
-        ),
-      ),
-      body: cyclesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (cycles) => cycles.isEmpty
-            ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.science_outlined,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('No cycles yet'),
-                    const SizedBox(height: 8),
-                    FilledButton.tonal(
-                      onPressed: () => context.push('/cycle/new'),
-                      child: const Text('Create first cycle'),
-                    ),
-                  ],
+          cyclesAsync.when(
+            loading: () => const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
+            error: (e, _) => SliverFillRemaining(child: Center(child: Text('Error: $e'))),
+            data: (cycles) => cycles.isEmpty
+              ? _EmptyCycles(onNew: () => context.push('/cycle/new'))
+              : SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) => _ModernCycleTile(cycle: cycles[i]),
+                    childCount: cycles.length,
+                  ),
                 ),
-              )
-            : ListView.separated(
-                itemCount: cycles.length,
-                separatorBuilder: (_, _) =>
-                    const Divider(height: 1, indent: 72),
-                itemBuilder: (ctx, i) => _CycleTile(cycle: cycles[i]),
-              ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 80)),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/cycle/new'),
         icon: const Icon(Icons.add),
-        label: const Text('New cycle'),
+        label: const Text('New Cycle'),
+        elevation: 2,
       ),
     );
   }
 }
 
-class _CycleTile extends StatelessWidget {
+class _ModernCycleTile extends StatelessWidget {
   final IvfCycle cycle;
-  const _CycleTile({required this.cycle});
+  const _ModernCycleTile({required this.cycle});
 
   @override
   Widget build(BuildContext context) {
-    final pickupStr = cycle.oocytePickupDate != null
+    final dateStr = cycle.oocytePickupDate != null
         ? DateFormat('dd MMM yyyy').format(cycle.oocytePickupDate!)
-        : 'No pickup date';
+        : 'Created ${DateFormat('dd MMM').format(cycle.createdAt)}';
 
-    int? currentDay;
-    if (cycle.oocytePickupDate != null) {
-      final diff = DateTime.now().difference(cycle.oocytePickupDate!).inDays;
-      if (diff >= 0 && diff <= 6) {
-        currentDay = diff == 0 ? 1 : (diff == 1 ? 2 : (diff == 2 ? 3 : 5));
-      }
-    }
-
-    return ListTile(
-      leading: CircleAvatar(child: Text(cycle.wifeName[0].toUpperCase())),
-      title: Text('${cycle.wifeName}  /  ${cycle.husbandName}'),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (cycle.cycleIdentifier != null &&
-              cycle.cycleIdentifier!.isNotEmpty)
-            Text(
-              'ID: ${cycle.cycleIdentifier}',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Text(
+              cycle.wifeName[0].toUpperCase(),
+              style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold, fontSize: 18),
             ),
-          Text('$pickupStr${currentDay != null ? "  ·  Day $currentDay" : ""}'),
+          ),
+        ),
+        title: Text('${cycle.wifeName} / ${cycle.husbandName}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (cycle.cycleIdentifier != null)
+              Text('ID: ${cycle.cycleIdentifier}', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+            Text(dateStr, style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+          ],
+        ),
+        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        onTap: () => context.push('/cycle/${cycle.id}'),
+      ),
+    );
+  }
+}
+
+class _EmptyCycles extends StatelessWidget {
+  final VoidCallback onNew;
+  const _EmptyCycles({required this.onNew});
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverFillRemaining(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.science_outlined, size: 64, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text('No cycles found', style: TextStyle(color: Colors.grey[600], fontSize: 18)),
+          const SizedBox(height: 8),
+          TextButton(onPressed: onNew, child: const Text('Create your first cycle')),
         ],
       ),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => context.push('/cycle/${cycle.id}'),
     );
   }
 }

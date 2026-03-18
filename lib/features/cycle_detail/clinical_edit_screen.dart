@@ -16,22 +16,20 @@ class ClinicalEditScreen extends ConsumerStatefulWidget {
 class _ClinicalEditScreenState extends ConsumerState<ClinicalEditScreen> {
   final _amh = TextEditingController();
   final _bmi = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    final cycle = ref.read(cycleFormProvider(widget.cycleId)).asData?.value;
-    if (cycle != null) {
-      _amh.text = cycle.amh?.toString() ?? '';
-      _bmi.text = cycle.bmi?.toString() ?? '';
-    }
-  }
+  bool _initialized = false;
 
   @override
   void dispose() {
     _amh.dispose();
     _bmi.dispose();
     super.dispose();
+  }
+
+  void _sync(IvfCycle cycle) {
+    if (_initialized) return;
+    _amh.text = cycle.amh?.toString() ?? '';
+    _bmi.text = cycle.bmi?.toString() ?? '';
+    _initialized = true;
   }
 
   void _save() {
@@ -45,14 +43,21 @@ class _ClinicalEditScreenState extends ConsumerState<ClinicalEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cycleAsync = ref.watch(cycleFormProvider(widget.cycleId));
+    cycleAsync.whenData((c) { if (c != null) _sync(c); });
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Clinical Params')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          LabeledField(label: 'AMH (ng/ml)', controller: _amh, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save()),
-          LabeledField(label: 'BMI', controller: _bmi, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save()),
-        ],
+      appBar: AppBar(title: const Text('Clinical Parameters')),
+      body: cycleAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
+        data: (_) => ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            LabeledField(label: 'AMH (ng/ml)', controller: _amh, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save()),
+            LabeledField(label: 'BMI', controller: _bmi, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save()),
+          ],
+        ),
       ),
     );
   }

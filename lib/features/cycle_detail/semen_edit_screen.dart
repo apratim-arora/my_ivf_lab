@@ -19,19 +19,7 @@ class _SemenEditScreenState extends ConsumerState<SemenEditScreen> {
   final _fp = TextEditingController();
   final _sp = TextEditingController();
   final _im = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    final cycle = ref.read(cycleFormProvider(widget.cycleId)).asData?.value;
-    if (cycle != null) {
-      _volume.text = cycle.semenVolume?.toString() ?? '';
-      _conc.text = cycle.spermConc?.toString() ?? '';
-      _fp.text = cycle.motilityFp?.toString() ?? '';
-      _sp.text = cycle.motilitySp?.toString() ?? '';
-      _im.text = cycle.motilityIm?.toString() ?? '';
-    }
-  }
+  bool _initialized = false;
 
   @override
   void dispose() {
@@ -41,6 +29,16 @@ class _SemenEditScreenState extends ConsumerState<SemenEditScreen> {
     _sp.dispose();
     _im.dispose();
     super.dispose();
+  }
+
+  void _sync(IvfCycle cycle) {
+    if (_initialized) return;
+    _volume.text = cycle.semenVolume?.toString() ?? '';
+    _conc.text = cycle.spermConc?.toString() ?? '';
+    _fp.text = cycle.motilityFp?.toString() ?? '';
+    _sp.text = cycle.motilitySp?.toString() ?? '';
+    _im.text = cycle.motilityIm?.toString() ?? '';
+    _initialized = true;
   }
 
   void _save() {
@@ -57,25 +55,32 @@ class _SemenEditScreenState extends ConsumerState<SemenEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cycleAsync = ref.watch(cycleFormProvider(widget.cycleId));
+    cycleAsync.whenData((c) { if (c != null) _sync(c); });
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Semen Analysis')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          LabeledField(label: 'Volume (ml)', controller: _volume, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save()),
-          LabeledField(label: 'Concentration (M/ml)', controller: _conc, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save()),
-          const Divider(height: 32),
-          Text('Motility (%)', style: Theme.of(context).textTheme.titleSmall),
-          Row(
-            children: [
-              Expanded(child: LabeledField(label: 'FP', controller: _fp, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save())),
-              const SizedBox(width: 8),
-              Expanded(child: LabeledField(label: 'SP', controller: _sp, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save())),
-              const SizedBox(width: 8),
-              Expanded(child: LabeledField(label: 'IM', controller: _im, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save())),
-            ],
-          ),
-        ],
+      appBar: AppBar(title: const Text('Semen Analysis')),
+      body: cycleAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
+        data: (_) => ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            LabeledField(label: 'Volume (ml)', controller: _volume, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save()),
+            LabeledField(label: 'Concentration (M/ml)', controller: _conc, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save()),
+            const Divider(height: 40),
+            Text('Motility (%)', style: Theme.of(context).textTheme.titleSmall),
+            Row(
+              children: [
+                Expanded(child: LabeledField(label: 'FP', controller: _fp, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save())),
+                const SizedBox(width: 8),
+                Expanded(child: LabeledField(label: 'SP', controller: _sp, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save())),
+                const SizedBox(width: 8),
+                Expanded(child: LabeledField(label: 'IM', controller: _im, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save())),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -17,16 +17,14 @@ class _TimingEditScreenState extends ConsumerState<TimingEditScreen> {
   DateTime? _date;
   String? _pickupTime;
   String? _icsiTime;
+  bool _initialized = false;
 
-  @override
-  void initState() {
-    super.initState();
-    final cycle = ref.read(cycleFormProvider(widget.cycleId)).asData?.value;
-    if (cycle != null) {
-      _date = cycle.oocytePickupDate;
-      _pickupTime = cycle.oocytePickupTime;
-      _icsiTime = cycle.icsiTime;
-    }
+  void _sync(IvfCycle cycle) {
+    if (_initialized) return;
+    _date = cycle.oocytePickupDate;
+    _pickupTime = cycle.oocytePickupTime;
+    _icsiTime = cycle.icsiTime;
+    _initialized = true;
   }
 
   void _save() {
@@ -72,30 +70,45 @@ class _TimingEditScreenState extends ConsumerState<TimingEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cycleAsync = ref.watch(cycleFormProvider(widget.cycleId));
+    cycleAsync.whenData((c) { if (c != null) _sync(c); });
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Timing')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          ListTile(
-            title: const Text('Pickup Date'),
-            subtitle: Text(_date != null ? DateFormat('dd MMM yyyy').format(_date!) : 'Not set'),
-            trailing: const Icon(Icons.calendar_today),
-            onTap: _pickDate,
-          ),
-          ListTile(
-            title: const Text('Pickup Time'),
-            subtitle: Text(_pickupTime ?? 'Not set'),
-            trailing: const Icon(Icons.access_time),
-            onTap: () => _pickTime(true),
-          ),
-          ListTile(
-            title: const Text('ICSI Time'),
-            subtitle: Text(_icsiTime ?? 'Not set'),
-            trailing: const Icon(Icons.access_time),
-            onTap: () => _pickTime(false),
-          ),
-        ],
+      appBar: AppBar(title: const Text('Timing')),
+      body: cycleAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
+        data: (_) => ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            ListTile(
+              title: const Text('Pickup Date'),
+              subtitle: Text(_date != null ? DateFormat('dd MMM yyyy').format(_date!) : 'Not set'),
+              trailing: const Icon(Icons.calendar_today),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              tileColor: Colors.white,
+              onTap: _pickDate,
+            ),
+            const SizedBox(height: 12),
+            ListTile(
+              title: const Text('Pickup Time'),
+              subtitle: Text(_pickupTime ?? 'Not set'),
+              trailing: const Icon(Icons.access_time),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              tileColor: Colors.white,
+              onTap: () => _pickTime(true),
+            ),
+            const SizedBox(height: 12),
+            ListTile(
+              title: const Text('ICSI Time'),
+              subtitle: Text(_icsiTime ?? 'Not set'),
+              trailing: const Icon(Icons.access_time),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              tileColor: Colors.white,
+              onTap: () => _pickTime(false),
+            ),
+          ],
+        ),
       ),
     );
   }
