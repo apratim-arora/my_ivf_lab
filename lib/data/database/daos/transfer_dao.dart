@@ -10,7 +10,9 @@ class TransferDao extends DatabaseAccessor<AppDatabase>
 
   Stream<EmbryoTransfer?> watchForCycle(int cycleId) => (select(
     embryoTransfers,
-  )..where((t) => t.cycleId.equals(cycleId))).watchSingleOrNull();
+  )..where((t) => t.cycleId.equals(cycleId)))
+      .watch()
+      .map((rows) => rows.isEmpty ? null : rows.first);
 
   Future<void> upsert(EmbryoTransfersCompanion entry) =>
       into(embryoTransfers).insertOnConflictUpdate(entry);

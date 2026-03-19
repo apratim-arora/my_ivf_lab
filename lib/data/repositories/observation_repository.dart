@@ -12,4 +12,7 @@ class ObservationRepository {
       _dao.getForDay(cycleId, day);
 
   Future<void> upsert(DayObservationsCompanion entry) => _dao.upsert(entry);
+
+  Future<void> patch(int cycleId, int day, DayObservationsCompanion entry) =>
+      _dao.patch(cycleId, day, entry);
 }

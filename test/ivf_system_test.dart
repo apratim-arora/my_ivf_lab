@@ -45,6 +45,26 @@ void main() {
       expect(cycle?.wifeName, 'Jane'); // SHOULD NOT BE NULL
     });
 
+    test('Daily Observations - Multi-field Patching', () async {
+      final id = await db.cyclesDao.insertCycle(IvfCyclesCompanion.insert(
+        husbandName: 'H', wifeName: 'W', husbandAge: 30, wifeAge: 30,
+      ));
+
+      // 1. Set 2PN
+      await db.observationsDao.patch(id, 1, const DayObservationsCompanion(
+        twoPN2PB: Value(10),
+      ));
+
+      // 2. Set 2PB Only (should NOT wipe 2PN)
+      await db.observationsDao.patch(id, 1, const DayObservationsCompanion(
+        twoPBOnly: Value(5),
+      ));
+
+      final obs = await db.observationsDao.getForDay(id, 1);
+      expect(obs?.twoPN2PB, 10);
+      expect(obs?.twoPBOnly, 5);
+    });
+
     test('Metrics - Maturation Rate', () async {
       // 10 OCC, 8 MII -> 80%
       final id = await db.cyclesDao.insertCycle(IvfCyclesCompanion.insert(
@@ -61,24 +81,6 @@ void main() {
 
       final rate = container.read(maturationRateProvider(id));
       expect(rate, 0.8);
-    });
-
-    test('Observations - Day 1 Persistence', () async {
-      final id = await db.cyclesDao.insertCycle(IvfCyclesCompanion.insert(
-        husbandName: 'H',
-        wifeName: 'W',
-        husbandAge: 30,
-        wifeAge: 30,
-      ));
-
-      await db.observationsDao.upsert(DayObservationsCompanion.insert(
-        cycleId: id,
-        dayNumber: 1,
-        twoPN2PB: const Value(5),
-      ));
-
-      final obs = await db.observationsDao.getForDay(id, 1);
-      expect(obs?.twoPN2PB, 5);
     });
   });
 }

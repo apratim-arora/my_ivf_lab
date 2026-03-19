@@ -17,7 +17,8 @@ class DailyObsNotifier extends AsyncNotifier<DayObservation?> {
 
   Future<void> save(DayObservationsCompanion entry) async {
     final repo = ref.read(observationRepositoryProvider);
-    await repo.upsert(entry);
+    // Use patch to avoid wiping existing columns
+    await repo.patch(dayKeyArg.cycleId, dayKeyArg.day, entry);
     final updated = await repo.getForDay(dayKeyArg.cycleId, dayKeyArg.day);
     state = AsyncData(updated);
   }

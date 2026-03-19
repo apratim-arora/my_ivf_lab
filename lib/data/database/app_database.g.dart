@@ -2720,7 +2720,7 @@ class $EmbryoTransfersTable extends EmbryoTransfers
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES ivf_cycles (id)',
+      'UNIQUE REFERENCES ivf_cycles (id)',
     ),
   );
   static const VerificationMeta _embryosTransferredMeta =

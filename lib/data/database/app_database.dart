@@ -77,7 +77,7 @@ class BlastocystGrades extends Table {
 
 class EmbryoTransfers extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get cycleId => integer().references(IvfCycles, #id)();
+  IntColumn get cycleId => integer().references(IvfCycles, #id).unique()();
   IntColumn get embryosTransferred => integer().nullable()();
   DateTimeColumn get transferDate => dateTime().nullable()();
   IntColumn get embryosFrozen => integer().nullable()();
@@ -90,10 +90,10 @@ class EmbryoTransfers extends Table {
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
-    : super(executor ?? driftDatabase(name: 'embryology_v2')); // Changed name to force fresh start
+    : super(executor ?? driftDatabase(name: 'embryology_v3')); // Fresh start for v3 schema
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -101,9 +101,7 @@ class AppDatabase extends _$AppDatabase {
       await m.createAll();
     },
     onUpgrade: (m, from, to) async {
-      // In a real lab app, we'd handle each change.
-      // For this initial setup phase, if v1 exists, we just recreate to be safe.
-      if (from < 2) {
+      if (from < 3) {
         for (final table in allTables) {
           await m.deleteTable(table.actualTableName);
         }
