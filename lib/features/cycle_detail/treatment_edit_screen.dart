@@ -57,7 +57,12 @@ class _TreatmentEditScreenState extends ConsumerState<TreatmentEditScreen> {
     cycleAsync.whenData((c) { if (c != null) _sync(c); });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Treatment')),
+      appBar: AppBar(
+        title: const Text('Treatment'),
+        actions: [
+          TextButton(onPressed: () { _save(); Navigator.pop(context); }, child: const Text('Save')),
+        ],
+      ),
       body: cycleAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),

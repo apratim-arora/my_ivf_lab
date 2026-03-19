@@ -25,8 +25,6 @@ class CyclesDao extends DatabaseAccessor<AppDatabase> with _$CyclesDaoMixin {
   }
 
   Stream<List<IvfCycle>> watchActive() {
-    // Define 'active' as cycles created within the last 14 days
-    // or having a pickup date within the last 7 days.
     final now = DateTime.now();
     final twoWeeksAgo = now.subtract(const Duration(days: 14));
 
@@ -39,8 +37,10 @@ class CyclesDao extends DatabaseAccessor<AppDatabase> with _$CyclesDaoMixin {
   Future<int> insertCycle(IvfCyclesCompanion entry) =>
       into(ivfCycles).insert(entry);
 
-  Future<bool> updateCycle(IvfCyclesCompanion entry) =>
-      update(ivfCycles).replace(entry);
+  Future<bool> updateCycle(IvfCyclesCompanion entry) async {
+    final count = await (update(ivfCycles)..where((t) => t.id.equals(entry.id.value))).write(entry);
+    return count > 0;
+  }
 
   Future<IvfCycle?> getById(int id) =>
       (select(ivfCycles)..where((t) => t.id.equals(id))).getSingleOrNull();

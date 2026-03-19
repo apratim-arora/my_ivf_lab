@@ -32,8 +32,8 @@ class _ClinicalEditScreenState extends ConsumerState<ClinicalEditScreen> {
     _initialized = true;
   }
 
-  void _save() {
-    ref.read(cycleFormProvider(widget.cycleId).notifier).save(
+  Future<void> _save() async {
+    await ref.read(cycleFormProvider(widget.cycleId).notifier).save(
       IvfCyclesCompanion(
         amh: Value(double.tryParse(_amh.text)),
         bmi: Value(double.tryParse(_bmi.text)),
@@ -43,21 +43,52 @@ class _ClinicalEditScreenState extends ConsumerState<ClinicalEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<IvfCycle?>>(cycleFormProvider(widget.cycleId), (prev, next) {
+      next.whenData((cycle) {
+        if (cycle != null && !_initialized) setState(() => _sync(cycle));
+      });
+    });
+
     final cycleAsync = ref.watch(cycleFormProvider(widget.cycleId));
-    cycleAsync.whenData((c) { if (c != null) _sync(c); });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Clinical Parameters')),
+      appBar: AppBar(
+        title: const Text('Clinical Parameters'),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await _save();
+              if (mounted) Navigator.pop(context);
+            },
+            child: const Text('Done', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
       body: cycleAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (_) => ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            LabeledField(label: 'AMH (ng/ml)', controller: _amh, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save()),
-            LabeledField(label: 'BMI', controller: _bmi, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save()),
-          ],
-        ),
+        data: (cycle) {
+          if (cycle != null && !_initialized) {
+             WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) setState(() => _sync(cycle));
+            });
+          }
+          return ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              LabeledField(label: 'AMH (ng/ml)', controller: _amh, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save()),
+              LabeledField(label: 'BMI', controller: _bmi, keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => _save()),
+              const SizedBox(height: 40),
+              FilledButton(
+                onPressed: () async {
+                  await _save();
+                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Clinical data saved')));
+                },
+                child: const Text('Save Changes'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -26,7 +26,7 @@ void main() {
       container.dispose();
     });
 
-    test('Database and DAO - Basic Cycle', () async {
+    test('Database and DAO - Partial Update Persistence', () async {
       final id = await db.cyclesDao.insertCycle(IvfCyclesCompanion.insert(
         husbandName: 'John',
         wifeName: 'Jane',
@@ -34,8 +34,15 @@ void main() {
         wifeAge: 32,
       ));
 
+      // Update ONLY semen volume
+      await db.cyclesDao.updateCycle(IvfCyclesCompanion(
+        id: Value(id),
+        semenVolume: const Value(3.5),
+      ));
+
       final cycle = await db.cyclesDao.getById(id);
-      expect(cycle?.wifeName, 'Jane');
+      expect(cycle?.semenVolume, 3.5);
+      expect(cycle?.wifeName, 'Jane'); // SHOULD NOT BE NULL
     });
 
     test('Metrics - Maturation Rate', () async {

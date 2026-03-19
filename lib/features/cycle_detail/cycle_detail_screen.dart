@@ -30,27 +30,26 @@ class CycleDetailScreen extends ConsumerWidget {
           child: Scaffold(
             appBar: AppBar(
               title: Text('${cycle.wifeName} / ${cycle.husbandName}'),
-              bottom: TabBar(
+              bottom: const TabBar(
                 isScrollable: true,
-                dividerColor: Colors.transparent,
-                indicatorColor: Theme.of(context).primaryColor,
-                labelColor: Theme.of(context).primaryColor,
-                unselectedLabelColor: Colors.grey,
-                tabs: const [
-                  Tab(text: 'Summary'),
-                  Tab(text: 'Clinic'),
-                  Tab(text: 'Laboratory'),
-                  Tab(text: 'Timeline'),
+                tabs: [
+                  Tab(text: 'SUMMARY'),
+                  Tab(text: 'CLINIC'),
+                  Tab(text: 'LABORATORY'),
+                  Tab(text: 'TIMELINE'),
                 ],
               ),
             ),
-            body: TabBarView(
-              children: [
-                _SummaryTab(cycle: cycle),
-                _ClinicTab(cycle: cycle),
-                _LabTab(cycle: cycle),
-                _TimelineTab(cycle: cycle),
-              ],
+            body: Container(
+              color: const Color(0xFFF2F2F7),
+              child: TabBarView(
+                children: [
+                  _SummaryTab(cycle: cycle),
+                  _ClinicTab(cycle: cycle),
+                  _LabTab(cycle: cycle),
+                  _TimelineTab(cycle: cycle),
+                ],
+              ),
             ),
           ),
         );
@@ -69,50 +68,48 @@ class _SummaryTab extends ConsumerWidget {
     final fertRate = ref.watch(fertilizationRateProvider(cycle.id));
     final blastRate = ref.watch(blastulationRateProvider(cycle.id));
 
-    final pct = NumberFormat.percentPattern()..maximumFractionDigits = 1;
-
     return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 20),
+      padding: const EdgeInsets.symmetric(vertical: 24),
       children: [
-        const GroupingHeader(title: 'Key Performance Indicators'),
+        const GroupingHeader(title: 'Key Metrics'),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
-              _KpiCard(label: 'Maturation', value: matRate != null ? pct.format(matRate) : '—', color: Colors.blue),
-              _KpiCard(label: 'Fertilization', value: fertRate != null ? pct.format(fertRate) : '—', color: Colors.pink),
-              _KpiCard(label: 'Blastulation', value: blastRate != null ? pct.format(blastRate) : '—', color: Colors.purple),
+              _MetricRingCard(label: 'Maturation', value: matRate, color: Colors.blue),
+              _MetricRingCard(label: 'Fertilization', value: fertRate, color: Colors.pink),
+              _MetricRingCard(label: 'Blastulation', value: blastRate, color: Colors.purple),
             ],
           ),
         ),
 
-        const GroupingHeader(title: 'Patient Information'),
+        const GroupingHeader(title: 'Patient Details'),
         CupertinoCard(
           onTap: () => context.push('/cycle/${cycle.id}/edit/patient'),
           child: Column(
             children: [
-              _ModernInfoRow(Icons.person_outline, 'Wife', '${cycle.wifeName} (${cycle.wifeAge}y)'),
-              const Divider(indent: 40),
-              _ModernInfoRow(Icons.person_outline, 'Husband', '${cycle.husbandName} (${cycle.husbandAge}y)'),
-              if (cycle.cycleIdentifier != null) ...[
-                const Divider(indent: 40),
-                _ModernInfoRow(Icons.fingerprint, 'Cycle ID', cycle.cycleIdentifier!),
+              _ModernRow(Icons.person_2_outlined, 'Wife', '${cycle.wifeName} (${cycle.wifeAge}y)'),
+              const Divider(indent: 48),
+              _ModernRow(Icons.person_outline, 'Husband', '${cycle.husbandName} (${cycle.husbandAge}y)'),
+              if (cycle.cycleIdentifier != null && cycle.cycleIdentifier!.isNotEmpty) ...[
+                const Divider(indent: 48),
+                _ModernRow(Icons.tag_rounded, 'Reference ID', cycle.cycleIdentifier!),
               ],
             ],
           ),
         ),
 
-        const GroupingHeader(title: 'Procedure Timing'),
+        const GroupingHeader(title: 'Schedule'),
         CupertinoCard(
           onTap: () => context.push('/cycle/${cycle.id}/edit/timing'),
           child: Column(
             children: [
-              _ModernInfoRow(Icons.calendar_today_outlined, 'Pickup Date', cycle.oocytePickupDate != null ? DateFormat('dd MMM yyyy').format(cycle.oocytePickupDate!) : 'Not set'),
-              const Divider(indent: 40),
-              _ModernInfoRow(Icons.access_time, 'Pickup Time', cycle.oocytePickupTime ?? 'Not set'),
-              const Divider(indent: 40),
-              _ModernInfoRow(Icons.bolt_outlined, 'ICSI Time', cycle.icsiTime ?? 'Not set'),
+              _ModernRow(Icons.calendar_month_outlined, 'OPU Date', cycle.oocytePickupDate != null ? DateFormat('EEEE, dd MMM').format(cycle.oocytePickupDate!) : 'Not scheduled'),
+              const Divider(indent: 48),
+              _ModernRow(Icons.alarm_on_rounded, 'OPU Time', cycle.oocytePickupTime ?? 'Not set'),
+              const Divider(indent: 48),
+              _ModernRow(Icons.bolt_outlined, 'ICSI Time', cycle.icsiTime ?? 'Not set'),
             ],
           ),
         ),
@@ -128,32 +125,32 @@ class _ClinicTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 20),
+      padding: const EdgeInsets.symmetric(vertical: 24),
       children: [
-        const GroupingHeader(title: 'Wife Clinicals'),
+        const GroupingHeader(title: 'Clinical Data'),
         CupertinoCard(
           onTap: () => context.push('/cycle/${cycle.id}/edit/clinical'),
           child: Column(
             children: [
-              _ModernInfoRow(Icons.monitor_heart_outlined, 'AMH Level', '${cycle.amh ?? "—"} ng/ml'),
-              const Divider(indent: 40),
-              _ModernInfoRow(Icons.straighten, 'BMI', '${cycle.bmi ?? "—"}'),
+              _ModernRow(Icons.monitor_heart_outlined, 'AMH Level', '${cycle.amh ?? "—"} ng/ml'),
+              const Divider(indent: 48),
+              _ModernRow(Icons.straighten_rounded, 'Patient BMI', '${cycle.bmi ?? "—"}'),
             ],
           ),
         ),
 
-        const GroupingHeader(title: 'Treatment Details'),
+        const GroupingHeader(title: 'Treatment Protocol'),
         CupertinoCard(
           onTap: () => context.push('/cycle/${cycle.id}/edit/treatment'),
           child: Column(
             children: [
-              _ModernInfoRow(Icons.vaccines_outlined, 'Infertility', cycle.infertilityType ?? '—'),
+              _ModernRow(Icons.science_outlined, 'Fertility Type', cycle.infertilityType ?? 'Unspecified'),
               if (cycle.infertilityType == 'Other') ...[
-                const Divider(indent: 40),
-                _ModernInfoRow(Icons.edit_note, 'Specify', cycle.otherInfertilityType ?? '—'),
+                const Divider(indent: 48),
+                _ModernRow(Icons.edit_note_rounded, 'Specifics', cycle.otherInfertilityType ?? '—'),
               ],
-              const Divider(indent: 40),
-              _ModernInfoRow(Icons.list_alt, 'Protocol', cycle.stimProtocol ?? '—'),
+              const Divider(indent: 48),
+              _ModernRow(Icons.checklist_rtl_rounded, 'Stimulation', cycle.stimProtocol ?? 'Standard'),
             ],
           ),
         ),
@@ -171,47 +168,47 @@ class _LabTab extends ConsumerWidget {
     final transferAsync = ref.watch(transferProvider(cycle.id));
 
     return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 20),
+      padding: const EdgeInsets.symmetric(vertical: 24),
       children: [
-        const GroupingHeader(title: 'Semen Analysis'),
+        const GroupingHeader(title: 'Semen Profile'),
         CupertinoCard(
           onTap: () => context.push('/cycle/${cycle.id}/edit/semen'),
           child: Column(
             children: [
-              _ModernInfoRow(Icons.water_drop_outlined, 'Volume', '${cycle.semenVolume ?? "—"} ml'),
-              const Divider(indent: 40),
-              _ModernInfoRow(Icons.science_outlined, 'Conc.', '${cycle.spermConc ?? "—"} M/ml'),
-              const Divider(indent: 40),
-              _ModernInfoRow(Icons.speed, 'Motility', 'FP: ${cycle.motilityFp ?? 0}%, SP: ${cycle.motilitySp ?? 0}%, IM: ${cycle.motilityIm ?? 0}%'),
+              _ModernRow(Icons.water_drop_outlined, 'Sample Volume', '${cycle.semenVolume ?? "—"} ml'),
+              const Divider(indent: 48),
+              _ModernRow(Icons.biotech_outlined, 'Concentration', '${cycle.spermConc ?? "—"} M/ml'),
+              const Divider(indent: 48),
+              _ModernRow(Icons.auto_graph_rounded, 'Motility', 'FP: ${cycle.motilityFp ?? 0}%, SP: ${cycle.motilitySp ?? 0}%, IM: ${cycle.motilityIm ?? 0}%'),
             ],
           ),
         ),
 
-        const GroupingHeader(title: 'Oocyte Retrieval'),
+        const GroupingHeader(title: 'Oocyte Recovery'),
         CupertinoCard(
           onTap: () => context.push('/cycle/${cycle.id}/edit/retrieval'),
           child: Column(
             children: [
-              _ModernInfoRow(Icons.egg_outlined, 'Recovered', '${cycle.occRecovered ?? "—"}'),
-              const Divider(indent: 40),
-              _ModernInfoRow(Icons.check_circle_outline, 'MII / MI / GV', '${cycle.oocyteMii ?? 0} / ${cycle.oocyteMi ?? 0} / ${cycle.oocyteGv ?? 0}'),
+              _ModernRow(Icons.egg_alt_outlined, 'OCC Recovered', '${cycle.occRecovered ?? "—"}'),
+              const Divider(indent: 48),
+              _ModernRow(Icons.verified_outlined, 'Oocyte Status', 'MII: ${cycle.oocyteMii ?? 0} · MI: ${cycle.oocyteMi ?? 0} · GV: ${cycle.oocyteGv ?? 0}'),
             ],
           ),
         ),
 
-        const GroupingHeader(title: 'Final Outcome'),
+        const GroupingHeader(title: 'Cryopreservation'),
         transferAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator())),
           error: (e, _) => Text('Error: $e'),
           data: (transfer) => CupertinoCard(
             onTap: () => context.push('/cycle/${cycle.id}/edit/transfer'),
             child: Column(
               children: [
-                _ModernInfoRow(Icons.outbox, 'Transferred', '${transfer?.embryosTransferred ?? 0}'),
-                const Divider(indent: 40),
-                _ModernInfoRow(Icons.ac_unit, 'Frozen', '${transfer?.embryosFrozen ?? 0}'),
-                const Divider(indent: 40),
-                _ModernInfoRow(Icons.inventory_2_outlined, 'Device', transfer?.cryoDevice ?? '—'),
+                _ModernRow(Icons.ios_share_rounded, 'Embryos Transferred', '${transfer?.embryosTransferred ?? 0}'),
+                const Divider(indent: 48),
+                _ModernRow(Icons.ac_unit_rounded, 'Embryos Frozen', '${transfer?.embryosFrozen ?? 0}'),
+                const Divider(indent: 48),
+                _ModernRow(Icons.inventory_2_outlined, 'Storage Device', transfer?.cryoDevice ?? 'Not set'),
               ],
             ),
           ),
@@ -228,20 +225,20 @@ class _TimelineTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 20),
+      padding: const EdgeInsets.symmetric(vertical: 24),
       children: [
-        const GroupingHeader(title: 'Developmental Milestones'),
+        const GroupingHeader(title: 'Culture Timeline'),
         for (final day in [1, 2, 3, 5])
-          _TimelineTile(cycleId: cycle.id, day: day),
+          _TimelineNode(cycleId: cycle.id, day: day),
       ],
     );
   }
 }
 
-class _TimelineTile extends ConsumerWidget {
+class _TimelineNode extends ConsumerWidget {
   final int cycleId;
   final int day;
-  const _TimelineTile({required this.cycleId, required this.day});
+  const _TimelineNode({required this.cycleId, required this.day});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -255,90 +252,162 @@ class _TimelineTile extends ConsumerWidget {
       isRecorded = obs != null;
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: isRecorded ? Border.all(color: Colors.green.withValues(alpha: 0.2)) : null,
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: isRecorded ? Colors.green.withValues(alpha: 0.1) : Colors.blue.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Text('D$day', style: TextStyle(
-              color: isRecorded ? Colors.green[700] : Colors.blue[700],
-              fontWeight: FontWeight.bold,
-            )),
-          ),
-        ),
-        title: Text('Day $day Observations', style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(isRecorded ? 'Observations recorded' : 'Pending assessment', style: TextStyle(
-          color: isRecorded ? Colors.green[700] : Colors.orange[700],
-          fontSize: 12,
-        )),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-        onTap: () => context.push('/cycle/$cycleId/day/$day'),
-      ),
-    );
-  }
-}
-
-class _KpiCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-
-  const _KpiCard({required this.label, required this.value, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 130,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(value, style: TextStyle(color: color, fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 12, fontWeight: FontWeight.w500)),
+          Column(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: isRecorded ? Colors.green[500] : Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))
+                  ],
+                ),
+                child: Center(
+                  child: Text('D$day', style: TextStyle(
+                    color: isRecorded ? Colors.white : Colors.blue[700],
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  )),
+                ),
+              ),
+              if (day != 5) Container(width: 2, height: 40, color: Colors.grey[300]),
+            ],
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: InkWell(
+              onTap: () => context.push('/cycle/$cycleId/day/$day'),
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Day $day Development', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                          const SizedBox(height: 4),
+                          Text(isRecorded ? 'Assessment Completed' : 'Pending Observation', style: TextStyle(
+                            color: isRecorded ? Colors.green[600] : Colors.orange[700],
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          )),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: Colors.grey[300]),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _ModernInfoRow extends StatelessWidget {
+class _MetricRingCard extends StatelessWidget {
+  final String label;
+  final double? value;
+  final Color color;
+
+  const _MetricRingCard({required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = NumberFormat.percentPattern()..maximumFractionDigits = 0;
+
+    return Container(
+      width: 120,
+      height: 140,
+      margin: const EdgeInsets.only(right: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 10))
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: CircularProgressIndicator(
+                  value: value ?? 0,
+                  backgroundColor: color.withValues(alpha: 0.1),
+                  color: color,
+                  strokeWidth: 6,
+                  strokeCap: StrokeCap.round,
+                ),
+              ),
+              Text(value != null ? pct.format(value) : '—', style: TextStyle(
+                color: color,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              )),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(label, style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
+          )),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModernRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
 
-  const _ModernInfoRow(this.icon, this.label, this.value);
+  const _ModernRow(this.icon, this.label, this.value);
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.grey[400]),
-          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(8)),
+            child: Icon(icon, size: 20, color: Colors.blueGrey[400]),
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(color: Colors.grey[500], fontSize: 11, fontWeight: FontWeight.w500)),
-                Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w400)),
+                Text(label, style: TextStyle(color: Colors.grey[500], fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.3)),
+                const SizedBox(height: 2),
+                Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.black87)),
               ],
             ),
           ),

@@ -27,86 +27,145 @@ class _TimingEditScreenState extends ConsumerState<TimingEditScreen> {
     _initialized = true;
   }
 
-  void _save() {
-    ref.read(cycleFormProvider(widget.cycleId).notifier).save(
+  Future<void> _save({bool showFeedback = false}) async {
+    await ref.read(cycleFormProvider(widget.cycleId).notifier).save(
       IvfCyclesCompanion(
         oocytePickupDate: Value(_date),
         oocytePickupTime: Value(_pickupTime),
         icsiTime: Value(_icsiTime),
       ),
     );
-  }
-
-  Future<void> _pickDate() async {
-    final d = await showDatePicker(
-      context: context,
-      initialDate: _date ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (d != null) {
-      setState(() => _date = d);
-      _save();
-    }
-  }
-
-  Future<void> _pickTime(bool isPickup) async {
-    final t = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (t != null) {
-      final formatted = '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
-      setState(() {
-        if (isPickup) {
-          _pickupTime = formatted;
-        } else {
-          _icsiTime = formatted;
-        }
-      });
-      _save();
+    if (showFeedback && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Timing updated'), duration: Duration(seconds: 1)),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final cycleAsync = ref.watch(cycleFormProvider(widget.cycleId));
-    cycleAsync.whenData((c) { if (c != null) _sync(c); });
+
+    // Crucial: Only sync if data is present and we haven't initialized yet
+    cycleAsync.whenData((c) {
+      if (c != null && !_initialized) {
+        setState(() => _sync(c));
+      }
+    });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Timing')),
+      appBar: AppBar(
+        title: const Text('Procedure Timing'),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await _save();
+              if (mounted) Navigator.pop(context);
+            },
+            child: const Text('Done', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
       body: cycleAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (_) => ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           children: [
-            ListTile(
-              title: const Text('Pickup Date'),
-              subtitle: Text(_date != null ? DateFormat('dd MMM yyyy').format(_date!) : 'Not set'),
-              trailing: const Icon(Icons.calendar_today),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              tileColor: Colors.white,
-              onTap: _pickDate,
+            _SelectionTile(
+              label: 'Pickup Date',
+              value: _date != null ? DateFormat('dd MMM yyyy').format(_date!) : 'Select Date',
+              icon: Icons.calendar_today,
+              onTap: () async {
+                final d = await showDatePicker(
+                  context: context,
+                  initialDate: _date ?? DateTime.now(),
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                );
+                if (d != null) {
+                  setState(() => _date = d);
+                  _save();
+                }
+              },
             ),
-            const SizedBox(height: 12),
-            ListTile(
-              title: const Text('Pickup Time'),
-              subtitle: Text(_pickupTime ?? 'Not set'),
-              trailing: const Icon(Icons.access_time),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              tileColor: Colors.white,
-              onTap: () => _pickTime(true),
+            const SizedBox(height: 16),
+            _SelectionTile(
+              label: 'Pickup Time',
+              value: _pickupTime ?? 'Select Time',
+              icon: Icons.access_time,
+              onTap: () async {
+                final t = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+                if (t != null) {
+                  setState(() => _pickupTime = '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}');
+                  _save();
+                }
+              },
             ),
-            const SizedBox(height: 12),
-            ListTile(
-              title: const Text('ICSI Time'),
-              subtitle: Text(_icsiTime ?? 'Not set'),
-              trailing: const Icon(Icons.access_time),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              tileColor: Colors.white,
-              onTap: () => _pickTime(false),
+            const SizedBox(height: 16),
+            _SelectionTile(
+              label: 'ICSI Time',
+              value: _icsiTime ?? 'Select Time',
+              icon: Icons.bolt,
+              onTap: () async {
+                final t = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+                if (t != null) {
+                  setState(() => _icsiTime = '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}');
+                  _save();
+                }
+              },
             ),
+            const SizedBox(height: 40),
+            FilledButton(
+              onPressed: () => _save(showFeedback: true),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(56),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Save Changes'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectionTile extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _SelectionTile({required this.label, required this.value, required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Theme.of(context).primaryColor),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                  const SizedBox(height: 2),
+                  Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.grey),
           ],
         ),
       ),
